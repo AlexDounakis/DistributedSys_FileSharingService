@@ -6,11 +6,12 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
-public class AppNode {
+public class AppNode implements IAppNode {
 
-    protected static String Ip;
+    /*protected static String Ip;
     protected static int port;
     private static int type;
 
@@ -61,5 +62,15 @@ public class AppNode {
         System.out.println("APP NODE EXITING");
 
 
-    }
+    }*/
+    //------------------------------------------------------------------------------------------------------------------
+
+    List<Broker> brokers;
+    public void connect() {}
+    public void disconnect() {}
+    public void init(int x) {}
+    public void updateNodes() {}
+
+    AppNode(List<Broker> brokers) {}
+
 }

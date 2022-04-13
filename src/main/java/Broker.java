@@ -4,12 +4,13 @@ import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.List;
 import java.util.Scanner;
 
 
-public class Broker {
+public class Broker extends AppNode implements IBroker {
 
-    static InetAddress inetAddress;
+    /*static InetAddress inetAddress;
     protected static Address address = null;
     private static String Ip;
     private static int port;
@@ -131,5 +132,21 @@ public class Broker {
             }
         }
 
+    }*/
+    //------------------------------------------------------------------------------------------------------------------
+
+    List<Consumer> registeredUsers;
+    List<Publisher> registeredPublishers;
+    public Consumer acceptConnection(Consumer consumer) { return consumer; }
+    public Publisher acceptConnection(Publisher publisher) { return publisher; }
+    public void calculateKeys() {}
+    public void filterConsumers(String s) {}
+    public void notifyBrokersOnChanges() {}
+    public void notifyPublisher(String s) {}
+    public void pull(String s) {}
+
+    Broker(List<Broker> brokers) {
+        super(brokers);
     }
+
 }
