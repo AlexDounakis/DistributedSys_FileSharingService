@@ -9,6 +9,7 @@ import org.xml.sax.SAXException;
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 public class Publisher extends Thread  implements Runnable{
@@ -18,6 +19,13 @@ public class Publisher extends Thread  implements Runnable{
     public String channelName;
     public String text;
     protected Request reply_request;
+
+    protected ArrayList<Address> brokers = new ArrayList<>(Arrays.asList(
+            /// first random broker IP and Port
+            new Address("192.168.56.1", 6000)
+
+
+    ));
 
     public Publisher(){}
 
@@ -34,7 +42,8 @@ public class Publisher extends Thread  implements Runnable{
             try {
 
 
-                socket = new Socket(addr.getIp(), addr.getPort());
+                socket = new Socket(brokers.get(0).getIp(), brokers.get(0).getPort());
+
 
 
 

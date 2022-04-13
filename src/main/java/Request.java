@@ -8,6 +8,9 @@ public class Request implements Serializable {
     String VideoName;
     ArrayList<String> Topics;
     String text;
+
+    byte[] chunk;
+
 //    public Request(Address address, ArrayList<String> topics,SenderType senderType,String VideoName) {
 //        this.Address = address;
 //        this.Topics = topics;
