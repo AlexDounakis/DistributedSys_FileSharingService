@@ -9,9 +9,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.stream.Stream;
 
-public interface IPublisher extends INode{
+public interface IPublisher extends IAppNode {
 
-    void addHashTag(String hashtag);
+    /*void addHashTag(String hashtag);
 
     void removeHashTag(String hashtag);
 
@@ -23,6 +23,16 @@ public interface IPublisher extends INode{
 
     void notifyBrokerForHashtags(String string);
 
-    //ArrayList<MultimediaFile> generateChunks(File file) throws TikaException, IOException, SAXException;
+    //ArrayList<MultimediaFile> generateChunks(File file) throws TikaException, IOException, SAXException;*/
+
+    //------------------------------------------------------------------------------------------------------------------
+
+    ProfileName profileName;
+    ArrayList<Value> generateChunks(MultimediaFile mf);
+    void getBrokerList();
+    Broker hashTopic(String s);
+    void notifyBrokersNewMessage(String s);
+    void notifyFailure(Broker broker);
+    void push(String s, Value v);
 
 }

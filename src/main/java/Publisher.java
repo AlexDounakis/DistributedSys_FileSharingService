@@ -11,10 +11,12 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
-public class Publisher extends Thread  implements Runnable{
+//public class Publisher extends AppNode extends Thread implements IPublisher implements Runnable {
+public abstract class Publisher extends AppNode implements IPublisher, Runnable { //to abstract tha fygei otan kanoume uncomment
 
-    protected Socket socket;
+    /*protected Socket socket;
     public Address addr;
     public String channelName;
     public String text;
@@ -180,5 +182,20 @@ public class Publisher extends Thread  implements Runnable{
 //
 //    @Override
 //    public void notifyBrokerForHashtags(String string) {
-//    }
+//    }*/
+
+    //------------------------------------------------------------------------------------------------------------------
+
+    ProfileName profileName;
+    public ArrayList<Value> generateChunks(MultimediaFile mf) { return new ArrayList<Value>(); }
+    public void getBrokerList() {}
+    public Broker hashTopic(String s) { return new Broker(thelei parametro list); }
+    public void notifyBrokersNewMessage(String s) {}
+    public void notifyFailure(Broker broker) {}
+    public void push(String s, Value v) {}
+
+    Publisher(List<Broker> brokers) {
+        super(brokers);
+    }
+
 }
