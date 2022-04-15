@@ -13,6 +13,11 @@ public class Value implements Serializable {
         this.address = address;
     }
 
+    public Value (MultimediaFile m, Address address) {
+        this.multimediaFile = m;
+        this.address = address;
+    }
+
     public MultimediaFile getValue() {return multimediaFile;}
 
     public Address getAddress() {return address;}
