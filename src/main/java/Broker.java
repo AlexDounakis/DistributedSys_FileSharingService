@@ -78,7 +78,10 @@ public class Broker implements INode{
 
     }
     @Override
-    public void init(Request r){}
+    public void init(int x){}
+
+    @Override
+    public void updateNodes() { }
 
     @Override
     public void disconnect(){}
