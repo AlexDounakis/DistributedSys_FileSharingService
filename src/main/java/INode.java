@@ -3,7 +3,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public interface IAppNode {
+public interface INode {
 
     //static  final Address SynchronisedMessagingServiceAddress = new Address("127.0.0.1",6000);
 
@@ -15,7 +15,7 @@ public interface IAppNode {
     //------------------------------------------------------------------------------------------------------------------
 
     List<Broker> brokers = null;
-    void connect();
+    abstract void connect();
     void disconnect();
     void init(int x);
     void updateNodes();

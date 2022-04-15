@@ -13,9 +13,9 @@ import java.util.HashMap;
 import java.util.List;
 
 //public class Publisher extends AppNode extends Thread implements IPublisher implements Runnable {
-public abstract class Publisher extends AppNode implements IPublisher, Runnable { //to abstract tha fygei otan kanoume uncomment
+public class Publisher extends Thread implements IPublisher, Runnable {
 
-    /*protected Socket socket;
+    protected Socket socket;
     public Address addr;
     public String channelName;
     public String text;
@@ -173,14 +173,14 @@ public abstract class Publisher extends AppNode implements IPublisher, Runnable 
 //
 //    @Override
 //    public void notifyBrokerForHashtags(String string) {
-//    }*/
+//    }
 
     //------------------------------------------------------------------------------------------------------------------
 
     ProfileName profileName;
     public ArrayList<Value> generateChunks(MultimediaFile mf) { return new ArrayList<Value>(); }
     public void getBrokerList() {}
-    public Broker hashTopic(String s) { return new Broker(thelei parametro list); }
+    public Broker hashTopic(String s) { return new Broker("some_ip", 123); }
     public void notifyBrokersNewMessage(String s) {}
     public void notifyFailure(Broker broker) {}
     public void push(String s, Value v) {}

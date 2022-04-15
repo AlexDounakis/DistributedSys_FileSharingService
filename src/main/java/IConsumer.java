@@ -1,4 +1,4 @@
-public interface IConsumer extends IAppNode {
+public interface IConsumer extends INode {
 
     void disconnect(String s);
     void register(String s);

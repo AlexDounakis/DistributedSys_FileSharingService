@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Scanner;
 
 
-public class Broker extends AppNode implements IBroker {
+public class Broker implements IBroker {
 
-    /*static InetAddress inetAddress;
+    static InetAddress inetAddress;
     protected static Address address = null;
     private static String Ip;
     private static int port;
@@ -132,7 +132,7 @@ public class Broker extends AppNode implements IBroker {
             }
         }
 
-    }*/
+    }
     //------------------------------------------------------------------------------------------------------------------
 
     List<Consumer> registeredUsers;
@@ -145,8 +145,8 @@ public class Broker extends AppNode implements IBroker {
     public void notifyPublisher(String s) {}
     public void pull(String s) {}
 
-    Broker(List<Broker> brokers) {
+    /*Broker(List<Broker> brokers) {
         super(brokers);
-    }
+    }*/
 
 }
