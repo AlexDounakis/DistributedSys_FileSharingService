@@ -1,3 +1,4 @@
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -9,9 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public class AppNode implements IAppNode {
+public class AppNode {
 
-    /*protected static String Ip;
+    protected static String Ip;
     protected static int port;
     private static int type;
 
@@ -32,8 +33,6 @@ public class AppNode implements IAppNode {
             Ip = inetAddress.getHostAddress();
             System.out.println(Ip);
             address = new Address(Ip,port);
-//            System.out.println("HI , SELECT YOUR ACTIONS ,0 to exit ,  1 for consumer , 2 for pub");
-//            type = System.in.read();
 
         }catch(Exception e){
             e.getStackTrace();
@@ -49,7 +48,6 @@ public class AppNode implements IAppNode {
                 Publisher pub = new Publisher(address,"Test Channel Name");
 
                 pub.sendText(text);
-                //System.out.println("sendtext()");
 
                 System.out.println("HI , SELECT YOUR ACTIONS ,0 to exit ,  1 for consumer , 2 for pub");
                 type = new Scanner(System.in).nextInt();
@@ -62,15 +60,5 @@ public class AppNode implements IAppNode {
         System.out.println("APP NODE EXITING");
 
 
-    }*/
-    //------------------------------------------------------------------------------------------------------------------
-
-    List<Broker> brokers;
-    public void connect() {}
-    public void disconnect() {}
-    public void init(int x) {}
-    public void updateNodes() {}
-
-    AppNode(List<Broker> brokers) {}
-
+    }
 }

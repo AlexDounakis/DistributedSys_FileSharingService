@@ -11,16 +11,18 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 
 //public class Publisher extends AppNode extends Thread implements IPublisher implements Runnable {
-public abstract class Publisher extends AppNode implements IPublisher, Runnable { //to abstract tha fygei otan kanoume uncomment
+public class Publisher extends Thread implements IPublisher, Runnable {
 
-    /*protected Socket socket;
+    protected Socket socket;
     public Address addr;
     public String channelName;
     public String text;
     protected Request reply_request;
+
+    //ProfileName profileName;
+
 
     protected ArrayList<Address> brokers = new ArrayList<>(Arrays.asList(
             /// first random broker IP and Port
@@ -35,6 +37,45 @@ public abstract class Publisher extends AppNode implements IPublisher, Runnable 
         this.addr = _addr;
         this.channelName = _channelName;
     }
+
+    public static void main (String args[]) throws TikaException, IOException, SAXException {
+
+        Publisher pub = new Publisher();
+        String path = "C:\\Users\\alex\\source\\repos\\distributed_sys_streamer\\data\\sample3.mp4";
+
+        HashMap<String,String> my_video = pub.getMetadata(path);
+        MultimediaFile video_bytes = new MultimediaFile(IOUtils.toByteArray(new FileInputStream(path))  ,
+                "ChannelName_test",
+                my_video.get("Creation-Date"));
+
+
+        System.out.println(video_bytes.getVideoFileChunk());
+        System.out.println(video_bytes.DateCreated);
+
+
+
+
+    }
+
+
+    // Create Server Socket of Publisher
+    @Override
+    public void run(){ }
+
+    public void push(File file, ArrayList<String> topics, ObjectOutputStream outputStream) throws TikaException, IOException, SAXException {
+
+        String path = file.getAbsolutePath();
+        ArrayList<MultimediaFile> chunks = generateChunks(file);
+        for (MultimediaFile chunk : chunks) {
+            chunk.setHashtags(topics);
+        }
+
+        for (MultimediaFile chunk : chunks) {
+            outputStream.writeObject(chunk);
+        }
+    }
+
+    /// Extra Function
     // sendText summons a thread to deal with passing through a message - reading the response
     public void sendText(String _text){
         this.text = _text;
@@ -80,43 +121,6 @@ public abstract class Publisher extends AppNode implements IPublisher, Runnable 
 
     }
 
-    public static void main (String args[]) throws TikaException, IOException, SAXException {
-
-        Publisher pub = new Publisher();
-        String path = "C:\\Users\\alex\\source\\repos\\distributed_sys_streamer\\data\\sample3.mp4";
-
-        HashMap<String,String> my_video = pub.getMetadata(path);
-        MultimediaFile video_bytes = new MultimediaFile(IOUtils.toByteArray(new FileInputStream(path))  ,
-                "ChannelName_test",
-                my_video.get("Creation-Date"));
-
-
-        System.out.println(video_bytes.getVideoFileChunk());
-        System.out.println(video_bytes.DateCreated);
-
-
-
-
-    }
-
-
-    // Create Server Socket of Publisher
-    @Override
-    public void run(){ }
-//    public void push(File file, ArrayList<String> topics, ObjectOutputStream outputStream) throws TikaException, IOException, SAXException {
-//
-//        String path = file.getAbsolutePath();
-//        ArrayList<MultimediaFile> chunks = generateChunks(file);
-//        for (MultimediaFile chunk : chunks) {
-//            chunk.setHashtags(topics);
-//        }
-//
-//        for (MultimediaFile chunk : chunks) {
-//            outputStream.writeObject(chunk);
-//        }
-//    }
-
-    /// Extra Functions
     public HashMap<String, String> getMetadata(String file) throws TikaException, SAXException, IOException {
         HashMap<String, String> data = new HashMap<>();
 
@@ -153,49 +157,42 @@ public abstract class Publisher extends AppNode implements IPublisher, Runnable 
         return data;
     }
 
-//    public ArrayList<MultimediaFile> generateChunks(File file) throws TikaException, IOException, SAXException {
-//        ArrayList<MultimediaFile> chunks = new ArrayList<MultimediaFile>();
-//        byte[] videoFileChunk = new byte[1024 * 1024];// 1MB chunk
-//        var metaMap = getMetadata(file.getAbsolutePath());
-//
-//        try (FileInputStream fileInputStream = new FileInputStream(new File(file.getAbsolutePath()))) {
-//            while (fileInputStream.read(videoFileChunk, 0, videoFileChunk.length) > 0) {
-//                chunks.add(new MultimediaFile(this.getChannelName(),metaMap.get("Creation-Date") , metaMap.get("tiff:ImageLength"), null, metaMap.get("tiff:ImageWidth") ,null, null, videoFileChunk));
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        //MARK LAST CHUNK AS LAST TO HELP BROKER WITH ORDERING
-//        chunks.get(chunks.size() - 1).setIsLast(true);
-//        return chunks;
-//    }
-//    @Override
-//    public void addHashTag(String hashtag) {
-//    }
-//    @Override
-//    public void removeHashTag(String hashtag) {
-//    }
-//
-//    @Override
-//    public void notifyFailure(Broker broker) {
-//    }
-//
-//    @Override
-//    public void notifyBrokerForHashtags(String string) {
-//    }*/
 
-    //------------------------------------------------------------------------------------------------------------------
 
-    ProfileName profileName;
-    public ArrayList<Value> generateChunks(MultimediaFile mf) { return new ArrayList<Value>(); }
-    public void getBrokerList() {}
-    public Broker hashTopic(String s) { return new Broker(thelei parametro list); }
-    public void notifyBrokersNewMessage(String s) {}
-    public void notifyFailure(Broker broker) {}
-    public void push(String s, Value v) {}
+    // Override Functions Implementation
+    @Override
+    public void init(int x){}
+    @Override
+    public void connect(){}
+    @Override
+    public void disconnect(){}
+    @Override
+    public ArrayList<MultimediaFile> generateChunks(File file) throws TikaException, IOException, SAXException {
+        ArrayList<MultimediaFile> chunks = new ArrayList<MultimediaFile>();
+        byte[] videoFileChunk = new byte[1024 * 1024];// 1MB chunk
+        var metaMap = getMetadata(file.getAbsolutePath());
 
-    Publisher(List<Broker> brokers) {
-        super(brokers);
+        try (FileInputStream fileInputStream = new FileInputStream(new File(file.getAbsolutePath()))) {
+            while (fileInputStream.read(videoFileChunk, 0, videoFileChunk.length) > 0) {
+                chunks.add(new MultimediaFile(this.getprofileName(),metaMap.get("Creation-Date") , metaMap.get("tiff:ImageLength"), null, metaMap.get("tiff:ImageWidth") ,null, null, videoFileChunk));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        //MARK LAST CHUNK AS LAST TO HELP BROKER WITH ORDERING
+        chunks.get(chunks.size() - 1).setIsLast(true);
+        return chunks;
     }
-
+    @Override
+    public void updateNodes(){}
+    @Override
+    public void getBrokerList() {}
+    @Override
+    public Broker hashTopic(String s) { return new Broker("some_ip", 123); }
+    @Override
+    public void notifyBrokersNewMessage(String s) {}
+    @Override
+    public void notifyFailure(Broker broker) {}
+    @Override
+    public void push(String s, Value v) {}
 }

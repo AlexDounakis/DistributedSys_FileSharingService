@@ -1,6 +1,6 @@
 import java.util.List;
 
-public interface IBroker extends IAppNode {
+public interface IBroker extends INode {
 
     List<Consumer> registeredUsers = null;
     List<Publisher> registeredPublishers = null;
