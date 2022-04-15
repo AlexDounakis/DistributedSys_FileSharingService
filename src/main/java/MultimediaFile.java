@@ -40,7 +40,7 @@ public class MultimediaFile {
     }
 
     //Photo constructor
-    public MultimediaFile(byte[] FileChunk, String fileName, String channelName,String profileName, String dateCreated, String frameWidth, String frameHeight ){
+    public MultimediaFile(byte[] FileChunk, String fileName, String channelName, String dateCreated, String frameWidth, String frameHeight ){
         this.FileChunk = FileChunk;
         this.FileName =fileName;
         this.ChannelName = channelName;
@@ -50,7 +50,7 @@ public class MultimediaFile {
     }
 
     //Text constructor
-    public MultimediaFile(byte[] FileChunk, String fileName, String channelName,String profileName, String dateCreated){
+    public MultimediaFile(byte[] FileChunk, String fileName, String channelName, String dateCreated){
         this.FileChunk = FileChunk;
         this.FileName =fileName;
         this.ChannelName = channelName;
