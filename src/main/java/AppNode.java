@@ -1,3 +1,4 @@
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -6,6 +7,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class AppNode {
@@ -31,8 +33,6 @@ public class AppNode {
             Ip = inetAddress.getHostAddress();
             System.out.println(Ip);
             address = new Address(Ip,port);
-//            System.out.println("HI , SELECT YOUR ACTIONS ,0 to exit ,  1 for consumer , 2 for pub");
-//            type = System.in.read();
 
         }catch(Exception e){
             e.getStackTrace();
@@ -48,7 +48,6 @@ public class AppNode {
                 Publisher pub = new Publisher(address,"Test Channel Name");
 
                 pub.sendText(text);
-                //System.out.println("sendtext()");
 
                 System.out.println("HI , SELECT YOUR ACTIONS ,0 to exit ,  1 for consumer , 2 for pub");
                 type = new Scanner(System.in).nextInt();

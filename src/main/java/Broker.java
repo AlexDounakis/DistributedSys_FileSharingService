@@ -1,13 +1,12 @@
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 
-public class Broker {
+public class Broker implements INode{
 
     static InetAddress inetAddress;
     protected static Address address = null;
@@ -16,6 +15,9 @@ public class Broker {
 
     private Socket socket;
     private ServerSocket serverSocket;
+
+    private ArrayList<Address> registeredPublishers = new ArrayList<>();
+    private ArrayList<Address> registeredConsumers = new ArrayList<>();
 
     // Constructor
     public Broker(String Ip , int port){
@@ -75,6 +77,14 @@ public class Broker {
 
 
     }
+    @Override
+    public void init(int x){}
+
+    @Override
+    public void updateNodes() { }
+
+    @Override
+    public void disconnect(){}
 
     public class serverThread extends Thread{
         ObjectInputStream service_in;
@@ -98,17 +108,21 @@ public class Broker {
                 service_out = new ObjectOutputStream(socket.getOutputStream());
                 service_in = new ObjectInputStream(socket.getInputStream());
 
+
                 // Read Request serializable and read txt from pub
                 request = (Request) service_in.readObject();
+                // Register new Publisher
+                registeredPublishers.add(request.Address);
+
                 System.out.println(request.text);
 //                String text = service_in.readUTF();
 //                System.out.println(text);
 
                 // Write serializable back to pub
                 System.out.println("Text to send back to pub: \n");
-                String reply_text = System.console().readLine();
+                String reply_text =new BufferedReader(new InputStreamReader(System.in)).readLine();
                 System.out.println("my reply is: " + reply_text);
-                Request req = new Request(address,reply_text);
+                Request req = new Request(request.Address , reply_text);
                 System.out.println("Before .writeUTF ");
                 //service_out = new ObjectOutputStream(socket.getOutputStream());
 //
@@ -132,4 +146,5 @@ public class Broker {
         }
 
     }
+
 }
