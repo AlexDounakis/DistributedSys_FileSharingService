@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.math.BigInteger;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.stream.Stream;
@@ -30,7 +31,7 @@ public interface IPublisher extends INode {
     ProfileName profileName;
     ArrayList<MultimediaFile> generateChunks(File file) throws TikaException, IOException, SAXException;
     void getBrokerList();
-    Broker hashTopic(String s);
+    Broker hashTopic(String s) throws NoSuchAlgorithmException;
     void notifyBrokersNewMessage(String s);
     void notifyFailure(Broker broker);
     void push(String s, Value v);

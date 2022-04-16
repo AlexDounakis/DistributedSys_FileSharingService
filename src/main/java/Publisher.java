@@ -12,6 +12,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
 //public class Publisher extends AppNode extends Thread implements IPublisher implements Runnable {
 public class Publisher extends Thread implements IPublisher, Runnable {
 
@@ -187,8 +191,27 @@ public class Publisher extends Thread implements IPublisher, Runnable {
     public void updateNodes(){}
     @Override
     public void getBrokerList() {}
+
     @Override
-    public Broker hashTopic(String s) { return new Broker("some_ip", 123); }
+    public Broker hashTopic(String topic) throws NoSuchAlgorithmException {
+
+        MessageDigest digest = MessageDigest.getInstance("MD5");
+        digest.update(topic.getBytes(), 0, topic.length());
+        String md5 = new BigInteger(1, digest.digest()).toString(16);
+        BigInteger decimal = new BigInteger(md5, 16);
+        BigInteger result = decimal.mod(BigInteger.valueOf(3));
+
+        int mod = result.intValue();
+        switch (mod) {
+            case 0 -> System.out.println("Broker 1 will handle this topic.");
+            case 1 -> System.out.println("Broker 2 will handle this topic.");
+            case 2 -> System.out.println("Broker 3 will handle this topic.");
+        }
+
+        return new Broker("corrresponding broker's IP address", 12345);
+
+    }
+
     @Override
     public void notifyBrokersNewMessage(String s) {}
     @Override
