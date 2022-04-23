@@ -1,3 +1,5 @@
+import com.uwyn.jhighlight.fastutil.Hash;
+import net.didion.jwnl.data.Exc;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.ParseContext;
@@ -11,18 +13,19 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 //public class Publisher extends AppNode extends Thread implements IPublisher implements Runnable {
 public class Publisher extends Thread implements IPublisher, Runnable {
 
-    protected Socket socket;
+    private Socket socket;
     public Address addr;
     public String channelName;
     public String text;
-    protected Request reply_request;
+    private Value value;
 
     //ProfileName profileName;
-
+    private HashMap<Address , ArrayList<String>> brokersList;
 
     protected ArrayList<Address> brokers = new ArrayList<>(Arrays.asList(
             /// first random broker IP and Port
@@ -36,6 +39,7 @@ public class Publisher extends Thread implements IPublisher, Runnable {
     public Publisher(Address _addr , String _channelName){
         this.addr = _addr;
         this.channelName = _channelName;
+        init(5);
     }
 
     public static void main (String args[]) throws TikaException, IOException, SAXException {
@@ -51,10 +55,6 @@ public class Publisher extends Thread implements IPublisher, Runnable {
 
         System.out.println(video_bytes.getVideoFileChunk());
         System.out.println(video_bytes.DateCreated);
-
-
-
-
     }
 
 
@@ -83,12 +83,7 @@ public class Publisher extends Thread implements IPublisher, Runnable {
         // Thread .run() - thread functionality
         Runnable task = () -> {
             try {
-
-
                 socket = new Socket(brokers.get(0).getIp(), brokers.get(0).getPort());
-
-
-
 
                 ObjectOutputStream service_out = new ObjectOutputStream(socket.getOutputStream());
                 ObjectInputStream service_in = new ObjectInputStream(socket.getInputStream());
@@ -157,11 +152,37 @@ public class Publisher extends Thread implements IPublisher, Runnable {
         return data;
     }
 
-
-
     // Override Functions Implementation
     @Override
-    public void init(int x){}
+    public void init(int x){
+        Runnable task = () ->{
+            try {
+                System.out.println("Thread for init running...\n");
+                socket = new Socket(brokers.get(0).getIp(), brokers.get(0).getPort());
+
+                ObjectOutputStream service_out = new ObjectOutputStream(socket.getOutputStream());
+                ObjectInputStream service_in = new ObjectInputStream(socket.getInputStream());
+
+
+                service_out.writeObject("Hi , ready to init()");
+                // ObjectOutputStream service_out = new ObjectOutputStream(socket.getOutputStream());
+//                BrokerInfo brokerInfo = (HashMap) service_in.readObject();
+//                brokersList = brokerInfo.getBrokersList();
+
+                brokersList = (HashMap) service_in.readObject();
+                System.out.println("HashMap Read:\n");
+                brokersList.forEach((k,v)
+                        -> System.out.println("Address: " + k + "   Topics:" +  v)
+                );
+
+
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+        };
+        Thread initThread = new Thread(task);
+        initThread.start();
+    }
     @Override
     public void connect(){}
     @Override
@@ -174,7 +195,7 @@ public class Publisher extends Thread implements IPublisher, Runnable {
 
         try (FileInputStream fileInputStream = new FileInputStream(new File(file.getAbsolutePath()))) {
             while (fileInputStream.read(videoFileChunk, 0, videoFileChunk.length) > 0) {
-                chunks.add(new MultimediaFile(this.getprofileName(),metaMap.get("Creation-Date") , metaMap.get("tiff:ImageLength"), null, metaMap.get("tiff:ImageWidth") ,null, null, videoFileChunk));
+                chunks.add(new MultimediaFile( videoFileChunk ,"FileNameTest" ,this.channelName, metaMap.get("Creation-Date")));
             }
         } catch (Exception e) {
             e.printStackTrace();

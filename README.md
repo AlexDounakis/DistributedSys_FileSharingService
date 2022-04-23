@@ -11,3 +11,6 @@ Current version passes a serializable to server and back. <br>
 AppNode -> Publisher -> Thread -> Socket <br>
 
 Broker -> Socket -> Thread <br>
+
+UPDATE<br>
+publisher init() -> broker init() with BrokerInfo ArrayList update 

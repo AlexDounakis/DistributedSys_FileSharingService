@@ -38,23 +38,35 @@ public class AppNode {
             e.getStackTrace();
         }
 
-        System.out.print( "HI , SELECT YOUR ACTIONS ,0 to exit ,  1 for pub" );
+        System.out.print( "Welcome , select user type , 0 to exit , 1 for pub , 2 for consumer " );
         int type= new Scanner(System.in).nextInt();
         while( type != 0){
-            System.out.println("Hi, type text to send:");
+            // Publisher logic
+            if(type == 1) {
+                //System.out.println("Type message to send:");
+                try {
+                    //String text = new BufferedReader(new InputStreamReader(System.in)).readLine();
+                    Publisher pub = new Publisher(address, "Test Channel Name");
 
-            try{
-                String text =new BufferedReader(new InputStreamReader(System.in)).readLine();
-                Publisher pub = new Publisher(address,"Test Channel Name");
+                    // upload
+                    //pub.init(5);
+                    //pub.sendText(text);
 
-                pub.sendText(text);
-
-                System.out.println("HI , SELECT YOUR ACTIONS ,0 to exit ,  1 for consumer , 2 for pub");
-                type = new Scanner(System.in).nextInt();
-            }catch(Exception e ){
-                e.printStackTrace();
+                    System.out.println(" Select user type , 0 to exit , 1 for pub , 2 for consumer ");
+                    type = new Scanner(System.in).nextInt();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
-
+            // Consumer Logic
+            if(type == 2){
+                System.out.println(" SELECT FROM INIT / SEARCH / UNREGISTER");
+                String action = System.console().readLine();
+                if(action.equalsIgnoreCase("init")) {
+//                    new Consumer(address, port, action);
+//                    init = true;
+                }
+            }
 
         }
         System.out.println("APP NODE EXITING");

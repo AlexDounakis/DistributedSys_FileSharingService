@@ -1,34 +1,55 @@
 import java.io.*;
+import java.lang.reflect.Array;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Scanner;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 public class Broker implements INode{
 
     static InetAddress inetAddress;
-    protected static Address address = null;
+    private static Address address = null;
     private static String Ip;
     private static int port;
 
     private Socket socket;
     private ServerSocket serverSocket;
 
-    private ArrayList<Address> registeredPublishers = new ArrayList<>();
-    private ArrayList<Address> registeredConsumers = new ArrayList<>();
+    protected static final Map<Address, ArrayList<String>> brokerTopics = new ConcurrentHashMap<Address, ArrayList<String>>();
+    protected Map<Address, ArrayList<String>> brokerTopics() {
+        return Broker.brokerTopics;
+    }
+//    private HashMap<Address,ArrayList<String>> brokersList = new HashMap<>() {
+//        {
+//            put(new Address("192.281.1.1",9000) , new ArrayList<>() {{ add("nice1") ; add("topic1") ; }});
+//
+//        }
+//    };
+
+    // Registered Publishers and Consumers with topics
+    private HashMap<Address,ArrayList<String>> registeredPublishers;
+    private HashMap<Address,ArrayList<String>>  registeredConsumers;
+    // Total of initialized Clients , we dont keep track of topics etc.
+    private ArrayList<Address> initClients;
+
+    // this list includes both channel names and specific topics
+    public ArrayList<String> topics = new ArrayList<>();
 
     // Constructor
     public Broker(String Ip , int port){
         this.Ip = Ip;
         this.port = port;
-
+        //this.address = new Address(this.Ip ,this.port);
         try {
             this.serverSocket = new ServerSocket(port);
         } catch (IOException e) {
             e.printStackTrace();
         }
+        initClients = new ArrayList<>();
+        registeredConsumers = new HashMap<>();
+        registeredPublishers = new HashMap<>();
         connect();
 
     }
@@ -41,10 +62,17 @@ public class Broker implements INode{
         System.out.println(Ip);
         address = new Address(Ip,port);
 
+
+        brokerTopics.put(new Address("192.281.1.1",9000) ,new ArrayList<>() {
+            {
+                add("nice1");
+                add("topic1");
+
+            }
+        });
+
         new Broker(Ip , port);
     }
-
-    // connect() ++ functions
 
     // creates server side socket and accepts connections
     // start new thread for each connection
@@ -57,9 +85,13 @@ public class Broker implements INode{
 
                 socket = serverSocket.accept();
                 System.out.println("socket.accept()\n");
-                Thread thread = new serverThread(socket);
-                thread.start();
 
+                new Thread(new publisherThread(socket))
+                        .start();
+
+//                Thread threadConsumer = new consumerThread(socket);
+//                threadConsumer.start();
+//                System.out.println("cons thread.start()\n");
                 //System.out.println("Server Thread started ...\n");
             }
 
@@ -74,28 +106,25 @@ public class Broker implements INode{
                 ioException.printStackTrace();
             }
         }
-
-
     }
+
+    /// Broker init() is responsible serving the client(either pub or cons), the brokersList {< <Ip,Port>,ArrayList<String>(Topics) >}
     @Override
     public void init(int x){}
-
     @Override
     public void updateNodes() { }
-
     @Override
     public void disconnect(){}
 
-    public class serverThread extends Thread{
+///////////////// PUBLISHER THREAD INNER CLASS///////////
+    public class publisherThread extends Thread implements Serializable{
+
         ObjectInputStream service_in;
         ObjectOutputStream service_out;
-        public Socket socket;
-        private Request request;
+        private Socket socket;
+        private Value value;
 
-
-
-        public serverThread(Socket _socket){
-
+        public publisherThread(Socket _socket){
             socket = _socket;
         }
 
@@ -105,33 +134,12 @@ public class Broker implements INode{
 
             try{
                 System.out.println("Server Thread For Pub Triggered");
+//
                 service_out = new ObjectOutputStream(socket.getOutputStream());
                 service_in = new ObjectInputStream(socket.getInputStream());
-
-
-                // Read Request serializable and read txt from pub
-                request = (Request) service_in.readObject();
-                // Register new Publisher
-                registeredPublishers.add(request.Address);
-
-                System.out.println(request.text);
-//                String text = service_in.readUTF();
-//                System.out.println(text);
-
-                // Write serializable back to pub
-                System.out.println("Text to send back to pub: \n");
-                String reply_text =new BufferedReader(new InputStreamReader(System.in)).readLine();
-                System.out.println("my reply is: " + reply_text);
-                Request req = new Request(request.Address , reply_text);
-                System.out.println("Before .writeUTF ");
-                //service_out = new ObjectOutputStream(socket.getOutputStream());
 //
-                service_out.writeObject(req);
-                System.out.println(" .writeObject(req)");
-
-                service_out.flush();
-                System.out.println(" .flush()");
-
+                init();
+                //replyText();
 
 
             }catch(Exception e){
@@ -145,6 +153,95 @@ public class Broker implements INode{
             }
         }
 
+        void init(){
+            try {
+                System.out.println("Init()");
+                System.out.println(brokerTopics);
+
+                service_out.writeObject(new HashMap<>(brokerTopics));
+                service_out.flush();
+                System.out.println("Client Initialized");
+
+            }catch(IOException e){
+                e.printStackTrace();
+            }
+        }
+
+        public void replyText(){
+            try{
+                System.out.println("Method replyText() triggered ... \n");
+                // Read Request serializable and read txt from pub
+                value = (Value) service_in.readObject();
+
+                // Register new Publisher
+                registeredPublishers.put(value.getAddress() ,value.getMultimediaFile().Hashtags );
+
+                System.out.println(value.getMultimediaFile().Hashtags);
+//                String text = service_in.readUTF();
+//                System.out.println(text);
+
+                // Write serializable back to pub
+                System.out.println("Text to send back to pub: \n");
+                String reply_text =new BufferedReader(new InputStreamReader(System.in)).readLine();
+                System.out.println("my reply is: " + reply_text);
+
+                Request req = new Request(value.getAddress() , reply_text);
+                System.out.println("Before .writeUTF ");
+                //service_out = new ObjectOutputStream(socket.getOutputStream());
+//
+                service_out.writeObject(req);
+                System.out.println(" .writeObject(req)");
+
+                service_out.flush();
+                System.out.println(" .flush()");
+
+            }catch (IOException | ClassNotFoundException e){
+                e.printStackTrace();
+            }
+
+        }
+
     }
 
+
+    ///////////////// CONSUMER THREAD INNER CLASS///////////
+    /// run not implemented
+    public class consumerThread extends Thread{
+        ObjectInputStream service_in;
+        ObjectOutputStream service_out;
+        public Socket socket;
+        private Value value;
+
+        public consumerThread(Socket _socket){
+            this.socket = _socket;
+        }
+
+        @Override
+        public void run(){
+            System.out.println("Consumer Thread running ...\n");
+            try{
+                service_in = new ObjectInputStream(socket.getInputStream());
+                service_out = new ObjectOutputStream(socket.getOutputStream());
+
+                value = (Value)service_in.readObject();
+                // consumer already initialized
+                if(initClients.contains(value.getAddress())){
+
+                }/// Consumer not Initialized
+                else{
+                    init(5);
+                    initClients.add(value.getAddress());
+                    service_out.writeObject("USER REGISTERED");
+                }
+            }catch(Exception e){
+                e.printStackTrace();
+            }finally {
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 }
