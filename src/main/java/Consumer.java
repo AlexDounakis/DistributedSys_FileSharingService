@@ -6,6 +6,26 @@ public class Consumer implements IConsumer {
     public void register(String s) {}
     public void showConversationData(String s, Value v) {}
 
-    public Consumer(List<Broker> brokers) { super(brokers); }
+    @Override
+    public void connect() {
+
+    }
+
+    @Override
+    public void disconnect() {
+
+    }
+
+    @Override
+    public void init(int x) {
+
+    }
+
+    @Override
+    public void updateNodes() {
+
+    }
+
+    //public Consumer(List<Broker> brokers) { super(brokers); }
 
 }

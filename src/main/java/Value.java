@@ -1,4 +1,7 @@
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class Value implements Serializable {
 
@@ -18,7 +21,7 @@ public class Value implements Serializable {
         this.address = address;
     }
 
-    public MultimediaFile getValue() {return multimediaFile;}
+    public MultimediaFile getMultimediaFile() {return multimediaFile;}
 
     public Address getAddress() {return address;}
 
