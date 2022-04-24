@@ -69,7 +69,10 @@ public class Broker implements INode{
                 add("topic1");
 
             }
+
         });
+        brokerTopics.put(address,new ArrayList<>());
+
 
         new Broker(Ip , port);
     }
@@ -111,8 +114,16 @@ public class Broker implements INode{
     /// Broker init() is responsible serving the client(either pub or cons), the brokersList {< <Ip,Port>,ArrayList<String>(Topics) >}
     @Override
     public void init(int x){}
+
     @Override
-    public void updateNodes() { }
+    public void updateNodes(Value value) {
+        topics.addAll(value.getMultimediaFile().Hashtags);
+        topics.add(value.getMultimediaFile().ChannelName);
+        topics.stream().forEach( t -> brokerTopics.get(address).add(t) );
+
+        topics.stream().forEach( e -> System.out.println(e));
+
+    }
     @Override
     public void disconnect(){}
 
@@ -134,13 +145,19 @@ public class Broker implements INode{
 
             try{
                 System.out.println("Server Thread For Pub Triggered");
-//
+
                 service_out = new ObjectOutputStream(socket.getOutputStream());
                 service_in = new ObjectInputStream(socket.getInputStream());
-//
-                init();
-                //replyText();
 
+                Value val = (Value)service_in.readObject();
+                if(!initClients.contains(val.getAddress())){
+                    init();
+                    initClients.add(val.getAddress());
+                    System.out.println("Address:" + initClients.get(initClients.size()-1) +" is initialized... \n" );
+                }else{
+                       updatePublishers(val);
+                       updateNodes(val);
+                }
 
             }catch(Exception e){
                 e.printStackTrace();
@@ -166,6 +183,27 @@ public class Broker implements INode{
                 e.printStackTrace();
             }
         }
+
+        void updatePublishers(Value value){
+            System.out.println("Updating Publisher Topics");
+            // We already have the publisher registered to Broker
+            if(registeredPublishers.containsKey(value.getAddress())){
+                registeredPublishers.get(value.getAddress())
+                        .addAll(value.getMultimediaFile().Hashtags);
+
+            }else {
+                // Publisher not registered to Broker
+                registeredPublishers.put(value.getAddress(),  value.getMultimediaFile().Hashtags);
+
+            }
+
+            registeredPublishers.forEach((k,v)
+                    -> System.out.println("Publisher Address: " + k + "  Topics: " +v)
+            );
+
+        }
+
+
 
         public void replyText(){
             try{

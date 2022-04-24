@@ -22,7 +22,7 @@ public class Consumer implements IConsumer {
     }
 
     @Override
-    public void updateNodes() {
+    public void updateNodes(Value value) {
 
     }
 

@@ -17,6 +17,6 @@ public interface INode {
     void connect();
     void disconnect();
     void init(int x);
-    void updateNodes();
+    void updateNodes(Value value);
 
 }

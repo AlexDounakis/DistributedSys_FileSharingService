@@ -3,6 +3,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Array;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -45,12 +46,25 @@ public class AppNode {
             if(type == 1) {
                 //System.out.println("Type message to send:");
                 try {
-                    //String text = new BufferedReader(new InputStreamReader(System.in)).readLine();
+
                     Publisher pub = new Publisher(address, "Test Channel Name");
 
                     // upload
                     //pub.init(5);
-                    //pub.sendText(text);
+                    System.out.println("Enter text to share: \n");
+                    String text = new BufferedReader(new InputStreamReader(System.in)).readLine();
+
+                    System.out.println("Enter HashTag ...  type end to Stop");
+                    ArrayList<String> hashTags = new ArrayList();
+                    BufferedReader br  = new BufferedReader(new InputStreamReader(System.in));
+                    String hashtag;
+                    //!hashtag.readLine().equalsIgnoreCase("end")
+                    while(!(hashtag = br.readLine()).equals("end")){
+
+                        hashTags.add(hashtag);
+                        System.out.println(hashtag + " added to hashtags\n");
+                    }
+                    pub.sendText(text,hashTags);
 
                     System.out.println(" Select user type , 0 to exit , 1 for pub , 2 for consumer ");
                     type = new Scanner(System.in).nextInt();
