@@ -5,7 +5,7 @@ import java.util.List;
 
 public interface INode {
 
-    //static  final Address SynchronisedMessagingServiceAddress = new Address("127.0.0.1",6000);
+    static  final Address ZookeeperAddress = new Address("127.0.0.1",5000);
 
     //void init(Request request) throws IOException;
 

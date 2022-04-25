@@ -14,3 +14,6 @@ Broker -> Socket -> Thread <br>
 
 UPDATE<br>
 publisher init() -> broker init() with BrokerInfo ArrayList update 
+
+Update<br>
+Broker - Zookeeper connection with updateBrokerInfo() , getBrokerList()

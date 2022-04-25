@@ -79,7 +79,7 @@ public class Publisher extends Thread implements IPublisher, Runnable {
     // sendText summons a thread to deal with passing through a message - reading the response
     public void sendText(String _text , ArrayList<String> hashTags){
         this.text = _text;
-        //Request req = new Request(addr , text);
+
         // Thread .run() - thread functionality
         Runnable task = () -> {
             try {
@@ -107,6 +107,7 @@ public class Publisher extends Thread implements IPublisher, Runnable {
                 try {
                     // close socket connection
                     socket.close();
+                    System.out.println("Send text socket.close()");
                 } catch (IOException ioException) {
                     ioException.printStackTrace();
                 }
@@ -172,13 +173,18 @@ public class Publisher extends Thread implements IPublisher, Runnable {
 //                brokersList = brokerInfo.getBrokersList();
 
                 brokersList = (HashMap) service_in.readObject();
-                System.out.println("HashMap Read:\n");
+               //System.out.println("HashMap Read:\n");
                 brokersList.forEach((k,v)
                         -> System.out.println("Address: " + k + "   Topics:" +  v)
                 );
-                socket.close();
+
 
             }catch(Exception e){
+                e.printStackTrace();
+            }try{
+                socket.close();
+                System.out.println("Thread for init closed...");
+            }catch (IOException e){
                 e.printStackTrace();
             }
 

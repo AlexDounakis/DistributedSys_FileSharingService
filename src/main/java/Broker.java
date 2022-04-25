@@ -1,3 +1,5 @@
+import net.didion.jwnl.data.Exc;
+
 import java.io.*;
 import java.lang.reflect.Array;
 import java.net.InetAddress;
@@ -17,10 +19,10 @@ public class Broker implements INode{
     private Socket socket;
     private ServerSocket serverSocket;
 
-    protected static final Map<Address, ArrayList<String>> brokerTopics = new ConcurrentHashMap<Address, ArrayList<String>>();
-    protected Map<Address, ArrayList<String>> brokerTopics() {
-        return Broker.brokerTopics;
-    }
+    protected Map<Address, ArrayList<String>> brokerTopics = new ConcurrentHashMap<Address, ArrayList<String>>();
+//    protected Map<Address, ArrayList<String>> brokerTopics() {
+//        return Broker.brokerTopics;
+//    }
 //    private HashMap<Address,ArrayList<String>> brokersList = new HashMap<>() {
 //        {
 //            put(new Address("192.281.1.1",9000) , new ArrayList<>() {{ add("nice1") ; add("topic1") ; }});
@@ -35,7 +37,7 @@ public class Broker implements INode{
     private ArrayList<Address> initClients;
 
     // this list includes both channel names and specific topics
-    public ArrayList<String> topics = new ArrayList<>();
+    public static ArrayList<String> topics = new ArrayList<>();
 
     // Constructor
     public Broker(String Ip , int port){
@@ -61,17 +63,19 @@ public class Broker implements INode{
         Ip = inetAddress.getHostAddress();
         System.out.println(Ip);
         address = new Address(Ip,port);
+        topics.add("topic1");
+        topics.add("topic2");
 
 
-        brokerTopics.put(new Address("192.281.1.1",9000) ,new ArrayList<>() {
-            {
-                add("nice1");
-                add("topic1");
-
-            }
-
-        });
-        brokerTopics.put(address,new ArrayList<>());
+//        brokerTopics.put(new Address("192.281.1.1",9000) ,new ArrayList<>() {
+//            {
+//                add("nice1");
+//                add("topic1");
+//
+//            }
+//
+//        });
+//        brokerTopics.put(address,new ArrayList<>());
 
 
         new Broker(Ip , port);
@@ -117,22 +121,65 @@ public class Broker implements INode{
 
     @Override
     public void updateNodes(Value value) {
-        topics.addAll(value.getMultimediaFile().Hashtags);
-        topics.add(value.getMultimediaFile().ChannelName);
-        topics.stream().forEach( t -> brokerTopics.get(address).add(t) );
 
+        //topics.stream().forEach(t -> t.equalsIgnoreCase(value.getMultimediaFile().Hashtags.stream().forEach();));
+        topics.addAll(value.getMultimediaFile().Hashtags);
+//        topics.stream()
+//                .anyMatch(s -> s.equals(value.getMultimediaFile().ChannelName)) ? topics.add(value.getMultimediaFile().ChannelName) : System.out.println("hi");
+        //topics.stream().forEach( t -> brokerTopics.get(address).add(t) );
+
+        if(!topics.contains(value.getMultimediaFile().ChannelName)) {
+            topics.add(value.getMultimediaFile().ChannelName);
+        }
         topics.stream().forEach( e -> System.out.println(e));
 
     }
     @Override
     public void disconnect(){}
 
+    public HashMap<Address,ArrayList<String>> getBrokerList(){
+        HashMap<Address,ArrayList<String>> brokers = new HashMap<>();
+        ArrayList<Address> a = new ArrayList<Address>(brokers.keySet());
+
+        try(Socket service = new Socket(INode.ZookeeperAddress.getIp() , INode.ZookeeperAddress.getPort())){
+            ObjectOutputStream service_out = new ObjectOutputStream(service.getOutputStream());
+            ObjectInputStream service_in = new ObjectInputStream(service.getInputStream());
+
+            service_out.writeObject("get brokers");
+            service_out.flush();
+            brokers = (HashMap<Address, ArrayList<String>>) service_in.readObject();
+        }catch(IOException | ClassNotFoundException | ClassCastException e){
+            e.printStackTrace();
+            System.out.println("Problem synchronising brokers");
+            return null;
+        }
+        return brokers;
+    }
+
+    public void updateBrokerInfo(){
+        try{
+            Socket serviceSocket = new Socket(INode.ZookeeperAddress.getIp(), INode.ZookeeperAddress.getPort());
+
+            ObjectOutputStream out = new ObjectOutputStream(serviceSocket.getOutputStream());
+            out.writeObject("insert or update broker");
+            out.flush();
+
+            out.writeObject(new Value(address , topics));
+            out.flush();
+
+            System.out.println("Broker send info to Zookeeper");
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+
+    }
+
 ///////////////// PUBLISHER THREAD INNER CLASS///////////
     public class publisherThread extends Thread implements Serializable{
 
         ObjectInputStream service_in;
         ObjectOutputStream service_out;
-        private Socket socket;
+        private final Socket socket;
         private Value value;
 
         public publisherThread(Socket _socket){
@@ -157,6 +204,7 @@ public class Broker implements INode{
                 }else{
                        updatePublishers(val);
                        updateNodes(val);
+                       updateBrokerInfo();
                 }
 
             }catch(Exception e){
@@ -172,12 +220,9 @@ public class Broker implements INode{
 
         void init(){
             try {
-                System.out.println("Init()");
-                System.out.println(brokerTopics);
 
-                service_out.writeObject(new HashMap<>(brokerTopics));
+                service_out.writeObject(new HashMap<>(getBrokerList()));
                 service_out.flush();
-                System.out.println("Client Initialized");
 
             }catch(IOException e){
                 e.printStackTrace();
@@ -185,16 +230,16 @@ public class Broker implements INode{
         }
 
         void updatePublishers(Value value){
-            System.out.println("Updating Publisher Topics");
+
             // We already have the publisher registered to Broker
             if(registeredPublishers.containsKey(value.getAddress())){
                 registeredPublishers.get(value.getAddress())
                         .addAll(value.getMultimediaFile().Hashtags);
-
+                System.out.println("Pub updated ....");
             }else {
                 // Publisher not registered to Broker
                 registeredPublishers.put(value.getAddress(),  value.getMultimediaFile().Hashtags);
-
+                System.out.println("Pub is now registered...");
             }
 
             registeredPublishers.forEach((k,v)
