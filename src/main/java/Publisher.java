@@ -174,7 +174,7 @@ public class Publisher extends Thread implements IPublisher, Runnable {
 
         try (FileInputStream fileInputStream = new FileInputStream(new File(file.getAbsolutePath()))) {
             while (fileInputStream.read(videoFileChunk, 0, videoFileChunk.length) > 0) {
-                chunks.add(new MultimediaFile(this.getprofileName(),metaMap.get("Creation-Date") , metaMap.get("tiff:ImageLength"), null, metaMap.get("tiff:ImageWidth") ,null, null, videoFileChunk));
+                chunks.add(new MultimediaFile( videoFileChunk ,"FileNameTest" ,this.channelName, metaMap.get("Creation-Date")));
             }
         } catch (Exception e) {
             e.printStackTrace();

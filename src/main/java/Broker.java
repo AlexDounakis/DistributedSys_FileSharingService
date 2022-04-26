@@ -18,6 +18,7 @@ public class Broker implements INode{
 
     private ArrayList<Address> registeredPublishers = new ArrayList<>();
     private ArrayList<Address> registeredConsumers = new ArrayList<>();
+    private ArrayList<String> topics = new ArrayList<>();
 
     // Constructor
     public Broker(String Ip , int port){

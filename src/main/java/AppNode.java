@@ -46,7 +46,7 @@ public class AppNode {
             try{
                 String text =new BufferedReader(new InputStreamReader(System.in)).readLine();
                 Publisher pub = new Publisher(address,"Test Channel Name");
-
+                Consumer con = new Consumer(address);
                 pub.sendText(text);
 
                 System.out.println("HI , SELECT YOUR ACTIONS ,0 to exit ,  1 for consumer , 2 for pub");
