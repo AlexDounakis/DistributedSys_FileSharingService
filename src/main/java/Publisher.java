@@ -96,11 +96,6 @@ public class Publisher extends Thread implements IPublisher, Runnable {
                 System.out.println("Pub .flush()");
                 service_out.flush();
 
-
-                Request text= (Request)service_in.readObject();
-                System.out.println(text.text);
-
-
             } catch (Exception e) {
                 e.getStackTrace();
             } finally {
@@ -177,7 +172,6 @@ public class Publisher extends Thread implements IPublisher, Runnable {
                 brokersList.forEach((k,v)
                         -> System.out.println("Address: " + k + "   Topics:" +  v)
                 );
-
 
             }catch(Exception e){
                 e.printStackTrace();
