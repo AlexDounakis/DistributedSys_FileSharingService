@@ -1,3 +1,5 @@
+import com.uwyn.jhighlight.fastutil.Hash;
+import net.didion.jwnl.data.Exc;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.ParseContext;
@@ -11,18 +13,19 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 //public class Publisher extends AppNode extends Thread implements IPublisher implements Runnable {
 public class Publisher extends Thread implements IPublisher, Runnable {
 
-    protected Socket socket;
+    private Socket socket;
     public Address addr;
     public String channelName;
     public String text;
-    protected Request reply_request;
+    private Value value;
 
     //ProfileName profileName;
-
+    private HashMap<Address , ArrayList<String>> brokersList;
 
     protected ArrayList<Address> brokers = new ArrayList<>(Arrays.asList(
             /// first random broker IP and Port
@@ -36,6 +39,7 @@ public class Publisher extends Thread implements IPublisher, Runnable {
     public Publisher(Address _addr , String _channelName){
         this.addr = _addr;
         this.channelName = _channelName;
+        init(5);
     }
 
     public static void main (String args[]) throws TikaException, IOException, SAXException {
@@ -51,10 +55,6 @@ public class Publisher extends Thread implements IPublisher, Runnable {
 
         System.out.println(video_bytes.getVideoFileChunk());
         System.out.println(video_bytes.DateCreated);
-
-
-
-
     }
 
 
@@ -77,32 +77,24 @@ public class Publisher extends Thread implements IPublisher, Runnable {
 
     /// Extra Function
     // sendText summons a thread to deal with passing through a message - reading the response
-    public void sendText(String _text){
+    public void sendText(String _text , ArrayList<String> hashTags){
         this.text = _text;
-        //Request req = new Request(addr , text);
+
         // Thread .run() - thread functionality
         Runnable task = () -> {
             try {
-
+                System.out.println("thread started ...");
 
                 socket = new Socket(brokers.get(0).getIp(), brokers.get(0).getPort());
-
-
-
-
                 ObjectOutputStream service_out = new ObjectOutputStream(socket.getOutputStream());
                 ObjectInputStream service_in = new ObjectInputStream(socket.getInputStream());
 
-                System.out.println("thread started ...");
-                Request req_response = new Request(addr,_text);
-                service_out.writeObject(req_response);
+                MultimediaFile file =new MultimediaFile(this.channelName,text);
+                file.setHashtags(hashTags);
+
+                service_out.writeObject(new Value( file,this.addr));
                 System.out.println("Pub .flush()");
                 service_out.flush();
-
-
-                Request text= (Request)service_in.readObject();
-                System.out.println(text.text);
-
 
             } catch (Exception e) {
                 e.getStackTrace();
@@ -110,6 +102,7 @@ public class Publisher extends Thread implements IPublisher, Runnable {
                 try {
                     // close socket connection
                     socket.close();
+                    System.out.println("Send text socket.close()");
                 } catch (IOException ioException) {
                     ioException.printStackTrace();
                 }
@@ -121,7 +114,7 @@ public class Publisher extends Thread implements IPublisher, Runnable {
 
     }
 
-    public HashMap<String, String> getMetadata(String file) throws TikaException, SAXException, IOException {
+    public HashMap<String, String> getMetadata(String file){
         HashMap<String, String> data = new HashMap<>();
 
         try (FileInputStream f = new FileInputStream(new File(file))) {
@@ -157,11 +150,42 @@ public class Publisher extends Thread implements IPublisher, Runnable {
         return data;
     }
 
-
-
     // Override Functions Implementation
     @Override
-    public void init(int x){}
+    public void init(int x){
+        Runnable task = () ->{
+            try {
+                System.out.println("Thread for init running...\n");
+                socket = new Socket(brokers.get(0).getIp(), brokers.get(0).getPort());
+
+                ObjectOutputStream service_out = new ObjectOutputStream(socket.getOutputStream());
+                ObjectInputStream service_in = new ObjectInputStream(socket.getInputStream());
+
+
+                service_out.writeObject(new Value(this.addr));
+                // ObjectOutputStream service_out = new ObjectOutputStream(socket.getOutputStream());
+//                BrokerInfo brokerInfo = (HashMap) service_in.readObject();
+//                brokersList = brokerInfo.getBrokersList();
+
+                brokersList = (HashMap) service_in.readObject();
+               //System.out.println("HashMap Read:\n");
+                brokersList.forEach((k,v)
+                        -> System.out.println("Address: " + k + "   Topics:" +  v)
+                );
+
+            }catch(Exception e){
+                e.printStackTrace();
+            }try{
+                socket.close();
+                System.out.println("Thread for init closed...");
+            }catch (IOException e){
+                e.printStackTrace();
+            }
+
+        };
+        Thread initThread = new Thread(task);
+        initThread.start();
+    }
     @Override
     public void connect(){}
     @Override
@@ -184,7 +208,7 @@ public class Publisher extends Thread implements IPublisher, Runnable {
         return chunks;
     }
     @Override
-    public void updateNodes(){}
+    public void updateNodes(Value value){}
     @Override
     public void getBrokerList() {}
     @Override

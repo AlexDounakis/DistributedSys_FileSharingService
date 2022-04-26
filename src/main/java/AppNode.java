@@ -3,6 +3,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Array;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -38,23 +39,48 @@ public class AppNode {
             e.getStackTrace();
         }
 
-        System.out.print( "HI , SELECT YOUR ACTIONS ,0 to exit ,  1 for pub" );
+        System.out.print( "Welcome , select user type , 0 to exit , 1 for pub , 2 for consumer " );
         int type= new Scanner(System.in).nextInt();
         while( type != 0){
-            System.out.println("Hi, type text to send:");
+            // Publisher logic
+            if(type == 1) {
+                //System.out.println("Type message to send:");
+                try {
 
-            try{
-                String text =new BufferedReader(new InputStreamReader(System.in)).readLine();
-                Publisher pub = new Publisher(address,"Test Channel Name");
-                Consumer con = new Consumer(address);
-                pub.sendText(text);
+                    Publisher pub = new Publisher(address, "Test Channel Name");
 
-                System.out.println("HI , SELECT YOUR ACTIONS ,0 to exit ,  1 for consumer , 2 for pub");
-                type = new Scanner(System.in).nextInt();
-            }catch(Exception e ){
-                e.printStackTrace();
+                    // upload
+                    //pub.init(5);
+                    System.out.println("Enter text to share: \n");
+                    String text = new BufferedReader(new InputStreamReader(System.in)).readLine();
+
+                    System.out.println("Enter HashTag ...  type end to Stop");
+                    ArrayList<String> hashTags = new ArrayList();
+                    BufferedReader br  = new BufferedReader(new InputStreamReader(System.in));
+                    String hashtag;
+                    //!hashtag.readLine().equalsIgnoreCase("end")
+                    while(!(hashtag = br.readLine()).equals("end")){
+
+                        hashTags.add(hashtag);
+                        System.out.println(hashtag + " added to hashtags\n");
+                    }
+                    pub.sendText(text,hashTags);
+
+                    System.out.println(" Select user type , 0 to exit , 1 for pub , 2 for consumer ");
+                    type = new Scanner(System.in).nextInt();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
-
+            // Consumer Logic
+            if(type == 2){
+                System.out.println(" SELECT FROM INIT / SEARCH / UNREGISTER");
+                String action = System.console().readLine();
+                if(action.equalsIgnoreCase("init")) {
+//                    new Consumer(address, port, action);
+//                    init = true;
+                }
+            }
 
         }
         System.out.println("APP NODE EXITING");

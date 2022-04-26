@@ -1,8 +1,12 @@
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class Value implements Serializable {
 
     private MultimediaFile multimediaFile;
+    private ArrayList<String> topics;
     private Address address;
 
     public Value (MultimediaFile m) {
@@ -18,9 +22,18 @@ public class Value implements Serializable {
         this.address = address;
     }
 
-    public MultimediaFile getValue() {return multimediaFile;}
+    public Value (Address address,ArrayList<String> topics){
+        this.address = address;
+        this.topics = topics;
+    }
+
+    public MultimediaFile getMultimediaFile() {return multimediaFile;}
 
     public Address getAddress() {return address;}
+
+    public ArrayList<String> getTopics(){
+        return topics;
+    }
 
     //@Override
     //public String toString() {return this.multimediaFile +" , "+this.address;}

@@ -27,7 +27,7 @@ public interface IPublisher extends INode {
 
     //------------------------------------------------------------------------------------------------------------------
 
-    ProfileName profileName;
+    ProfileName profileName = null;
     ArrayList<MultimediaFile> generateChunks(File file) throws TikaException, IOException, SAXException;
     void getBrokerList();
     Broker hashTopic(String s);
