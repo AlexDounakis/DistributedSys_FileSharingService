@@ -19,17 +19,6 @@ public class Broker implements INode{
     private Socket socket;
     private ServerSocket serverSocket;
 
-    protected Map<Address, ArrayList<String>> brokerTopics = new ConcurrentHashMap<Address, ArrayList<String>>();
-//    protected Map<Address, ArrayList<String>> brokerTopics() {
-//        return Broker.brokerTopics;
-//    }
-//    private HashMap<Address,ArrayList<String>> brokersList = new HashMap<>() {
-//        {
-//            put(new Address("192.281.1.1",9000) , new ArrayList<>() {{ add("nice1") ; add("topic1") ; }});
-//
-//        }
-//    };
-
     // Registered Publishers and Consumers with topics
     private HashMap<Address,ArrayList<String>> registeredPublishers;
     private HashMap<Address,ArrayList<String>>  registeredConsumers;
@@ -63,20 +52,6 @@ public class Broker implements INode{
         Ip = inetAddress.getHostAddress();
         System.out.println(Ip);
         address = new Address(Ip,port);
-        topics.add("topic1");
-        topics.add("topic2");
-
-
-//        brokerTopics.put(new Address("192.281.1.1",9000) ,new ArrayList<>() {
-//            {
-//                add("nice1");
-//                add("topic1");
-//
-//            }
-//
-//        });
-//        brokerTopics.put(address,new ArrayList<>());
-
 
         new Broker(Ip , port);
     }
@@ -118,7 +93,6 @@ public class Broker implements INode{
     /// Broker init() is responsible serving the client(either pub or cons), the brokersList {< <Ip,Port>,ArrayList<String>(Topics) >}
     @Override
     public void init(int x){}
-
     @Override
     public void updateNodes(Value value) {
 
@@ -137,7 +111,7 @@ public class Broker implements INode{
     @Override
     public void disconnect(){}
 
-    public HashMap<Address,ArrayList<String>> getBrokerList(){
+    public static HashMap<Address,ArrayList<String>> getBrokerList(){
         HashMap<Address,ArrayList<String>> brokers = new HashMap<>();
         ArrayList<Address> a = new ArrayList<Address>(brokers.keySet());
 
@@ -168,6 +142,8 @@ public class Broker implements INode{
             out.flush();
 
             System.out.println("Broker send info to Zookeeper");
+
+
         }catch (IOException e){
             e.printStackTrace();
         }
@@ -188,8 +164,6 @@ public class Broker implements INode{
 
         @Override
         public void run(){
-
-
             try{
                 System.out.println("Server Thread For Pub Triggered");
 
@@ -197,14 +171,19 @@ public class Broker implements INode{
                 service_in = new ObjectInputStream(socket.getInputStream());
 
                 Value val = (Value)service_in.readObject();
+
                 if(!initClients.contains(val.getAddress())){
                     init();
                     initClients.add(val.getAddress());
                     System.out.println("Address:" + initClients.get(initClients.size()-1) +" is initialized... \n" );
+                }else if(!(val.getAction() == null)  && val.getAction().equals("get brokers")){
+                    init();
+                    System.out.println("Get Brokers........");
                 }else{
-                       updatePublishers(val);
-                       updateNodes(val);
-                       updateBrokerInfo();
+                    System.out.println(val.getAction());
+                    updateRegisteredPublishers(val);
+                    updateNodes(val);
+                    updateBrokerInfo();
                 }
 
             }catch(Exception e){
@@ -223,13 +202,12 @@ public class Broker implements INode{
 
                 service_out.writeObject(new HashMap<>(getBrokerList()));
                 service_out.flush();
-
             }catch(IOException e){
                 e.printStackTrace();
             }
         }
 
-        void updatePublishers(Value value){
+        void updateRegisteredPublishers(Value value){
 
             // We already have the publisher registered to Broker
             if(registeredPublishers.containsKey(value.getAddress())){

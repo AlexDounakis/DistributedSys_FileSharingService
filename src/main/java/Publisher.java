@@ -30,8 +30,6 @@ public class Publisher extends Thread implements IPublisher, Runnable {
     protected ArrayList<Address> brokers = new ArrayList<>(Arrays.asList(
             /// first random broker IP and Port
             new Address("192.168.56.1", 6000)
-
-
     ));
 
     public Publisher(){}
@@ -40,6 +38,7 @@ public class Publisher extends Thread implements IPublisher, Runnable {
         this.addr = _addr;
         this.channelName = _channelName;
         init(5);
+
     }
 
     public static void main (String args[]) throws TikaException, IOException, SAXException {
@@ -56,7 +55,6 @@ public class Publisher extends Thread implements IPublisher, Runnable {
         System.out.println(video_bytes.getVideoFileChunk());
         System.out.println(video_bytes.DateCreated);
     }
-
 
     // Create Server Socket of Publisher
     @Override
@@ -98,14 +96,6 @@ public class Publisher extends Thread implements IPublisher, Runnable {
 
             } catch (Exception e) {
                 e.getStackTrace();
-            } finally {
-                try {
-                    // close socket connection
-                    socket.close();
-                    System.out.println("Send text socket.close()");
-                } catch (IOException ioException) {
-                    ioException.printStackTrace();
-                }
             }
         };
         Thread thread = new Thread(task);
@@ -155,24 +145,19 @@ public class Publisher extends Thread implements IPublisher, Runnable {
     public void init(int x){
         Runnable task = () ->{
             try {
-                System.out.println("Thread for init running...\n");
+                System.out.println("\n Thread for init running...\n");
                 socket = new Socket(brokers.get(0).getIp(), brokers.get(0).getPort());
 
                 ObjectOutputStream service_out = new ObjectOutputStream(socket.getOutputStream());
                 ObjectInputStream service_in = new ObjectInputStream(socket.getInputStream());
 
-
                 service_out.writeObject(new Value(this.addr));
-                // ObjectOutputStream service_out = new ObjectOutputStream(socket.getOutputStream());
-//                BrokerInfo brokerInfo = (HashMap) service_in.readObject();
-//                brokersList = brokerInfo.getBrokersList();
+                service_out.flush();
 
                 brokersList = (HashMap) service_in.readObject();
-               //System.out.println("HashMap Read:\n");
                 brokersList.forEach((k,v)
                         -> System.out.println("Address: " + k + "   Topics:" +  v)
                 );
-
             }catch(Exception e){
                 e.printStackTrace();
             }try{
@@ -210,7 +195,29 @@ public class Publisher extends Thread implements IPublisher, Runnable {
     @Override
     public void updateNodes(Value value){}
     @Override
-    public void getBrokerList() {}
+    public void getBrokerList() {
+        Runnable task = () -> {
+            try{
+                System.out.println("Updating Brokers List...\n");
+                socket = new Socket(brokers.get(0).getIp(), brokers.get(0).getPort());
+
+                ObjectOutputStream service_out = new ObjectOutputStream(socket.getOutputStream());
+                ObjectInputStream service_in = new ObjectInputStream(socket.getInputStream());
+
+                service_out.writeObject(new Value(this.addr,"get brokers"));
+                service_out.flush();
+                brokersList = (HashMap) service_in.readObject();
+                //System.out.println("HashMap Read:\n");
+                brokersList.forEach((k,v)
+                        -> System.out.println("Address: " + k + "   Topics:" +  v)
+                );
+                socket.close();
+            }catch(IOException | ClassNotFoundException e){
+                e.printStackTrace();
+            }
+        };
+        new Thread(task).start();
+    }
     @Override
     public Broker hashTopic(String s) { return new Broker("some_ip", 123); }
     @Override

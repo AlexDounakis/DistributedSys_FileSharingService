@@ -1,4 +1,6 @@
 
+import org.apache.cxf.service.model.BindingInfo;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -21,9 +23,11 @@ public class AppNode {
     static InetAddress inetAddress;
     protected static Address address = null;
 
-    public int action ;
+    private int action ;
+    private boolean initialized = false;
 
-    public static void main (String args[]){
+
+    public static void main (String args[]) throws IOException {
 
 
         // get localhost IP and port num;
@@ -39,18 +43,21 @@ public class AppNode {
             e.getStackTrace();
         }
 
-        System.out.print( "Welcome , select user type , 0 to exit , 1 for pub , 2 for consumer " );
+        System.out.println("Enter Publisher Channel Name:  ");
+        String channelName =  new BufferedReader(new InputStreamReader(System.in)).readLine();
+
+        Publisher pub = new Publisher(address, channelName);
+
+        System.out.print( "Welcome , select user type , 0 to exit , 1 for pub , 2 for consumer  , 3 for Updating Broker Info" );
         int type= new Scanner(System.in).nextInt();
         while( type != 0){
             // Publisher logic
+
             if(type == 1) {
                 //System.out.println("Type message to send:");
                 try {
 
-                    Publisher pub = new Publisher(address, "Test Channel Name");
 
-                    // upload
-                    //pub.init(5);
                     System.out.println("Enter text to share: \n");
                     String text = new BufferedReader(new InputStreamReader(System.in)).readLine();
 
@@ -66,8 +73,6 @@ public class AppNode {
                     }
                     pub.sendText(text,hashTags);
 
-                    System.out.println(" Select user type , 0 to exit , 1 for pub , 2 for consumer ");
-                    type = new Scanner(System.in).nextInt();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -81,7 +86,12 @@ public class AppNode {
 //                    init = true;
                 }
             }
+            if(type == 3){
+                pub.getBrokerList();
 
+            }
+            System.out.println(" Select user type , 0 to exit , 1 for pub , 2 for consumer ");
+            type = new Scanner(System.in).nextInt();
         }
         System.out.println("APP NODE EXITING");
 
