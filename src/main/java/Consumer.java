@@ -3,7 +3,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Consumer implements IConsumer {
 
@@ -46,12 +46,13 @@ public class Consumer implements IConsumer {
     public void init(int x) {
         Runnable task = () ->{
             try {
-                System.out.println("Thread for init running...\n");
+                System.out.println("\n Thread for init running...\n");
                 socket = new Socket(brokers.get(0).getIp(), brokers.get(0).getPort());
 
                 ObjectOutputStream service_out = new ObjectOutputStream(socket.getOutputStream());
                 ObjectInputStream service_in = new ObjectInputStream(socket.getInputStream());
-                service_out.writeObject(new Value(this.addr));
+                service_out.writeObject(new Value(this.addr,SenderType.CONSUMER));
+
                 brokersList = (HashMap) service_in.readObject();
                 brokersList.forEach((k,v)
                         -> System.out.println("Address: " + k + "   Topics:" +  v));
@@ -85,6 +86,8 @@ public class Consumer implements IConsumer {
                 String ip;
                 int port;
                 ArrayList<String> temp = new ArrayList();
+                AtomicReference<Address> brokerAddress = null;
+
                 for (int i = 0; i < topics.size(); i++) {
                     ip = new BufferedReader(new InputStreamReader(System.in)).readLine();
                     port = Integer.parseInt(new BufferedReader(new InputStreamReader(System.in)).readLine());
@@ -94,7 +97,7 @@ public class Consumer implements IConsumer {
                     ObjectOutputStream service_out = new ObjectOutputStream(socket.getOutputStream());
                     ObjectInputStream service_in = new ObjectInputStream(socket.getInputStream());
                     temp.add(topics.get(i));
-                    service_out.writeObject(new Value(this.addr, temp));
+                    service_out.writeObject(new Value(this.addr, temp,SenderType.CONSUMER));
                     temp.clear();
                     service_out.flush();
 

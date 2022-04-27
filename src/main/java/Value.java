@@ -8,28 +8,35 @@ public class Value implements Serializable {
     private MultimediaFile multimediaFile;
     private ArrayList<String> topics;
     private Address address;
-    private String action = null;
+    private String action = "something";
     private String topic;
+    SenderType sender = null;
 
-    public Value (MultimediaFile m) {
+
+    public Value (MultimediaFile m,SenderType senderType) {
         this.multimediaFile = m;
+        this.sender = senderType;
     }
 
-    public Value (Address address) {
+    public Value (Address address,SenderType senderType) {
         this.address = address;
+        this.sender = senderType;
     }
 
-    public Value (MultimediaFile m, Address address) {
+    public Value (MultimediaFile m, Address address,SenderType senderType) {
         this.multimediaFile = m;
         this.address = address;
+        this.sender = senderType;
     }
-    public Value(Address address , String action){
+    public Value(Address address , String action,SenderType senderType){
         this.address = address;
         this.action = action;
+        this.sender = senderType;
     }
-    public Value (Address address,ArrayList<String> topics){
+    public Value (Address address,ArrayList<String> topics,SenderType senderType){
         this.address = address;
         this.topics = topics;
+        this.sender = senderType;
     }
 
     public MultimediaFile getMultimediaFile() {return multimediaFile;}
