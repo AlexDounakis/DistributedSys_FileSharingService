@@ -324,7 +324,7 @@ public class Broker implements INode{
         // We already have the consumer registered to Broker
         if(registeredConsumers.containsKey(value.getAddress())){
             registeredConsumers.get(value.getAddress())
-                    .addAll(value.getTopics());
+                    .add(value.getTopic());
             System.out.println("Con updated ....");
         }else {
             // Publisher not registered to Broker

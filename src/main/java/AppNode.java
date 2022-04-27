@@ -77,19 +77,18 @@ public class AppNode {
                 System.out.println(" SELECT FROM INIT / SEARCH / UNREGISTER");
                 String action = System.console().readLine();
                 if(action.equalsIgnoreCase("init")) {
-//                    new Consumer(address, port, action);
-//                    init = true;
+
                     try {
 
                         System.out.println("Enter topics of interest: \n");
                         String topic = new BufferedReader(new InputStreamReader(System.in)).readLine();
                         ArrayList<String> topics_one_by_one = new ArrayList();
-                        topics_one_by_one.add(topic);
+
                         System.out.println("Type end to Stop");
 
                         while(!(topic.equals("end"))){
-                            topic = new BufferedReader(new InputStreamReader(System.in)).readLine();
                             topics_one_by_one.add(topic);
+                            topic = new BufferedReader(new InputStreamReader(System.in)).readLine();
                             System.out.println(topic + " added to topics of interest\n");
                         }
                         con.sendTopics(topics_one_by_one);

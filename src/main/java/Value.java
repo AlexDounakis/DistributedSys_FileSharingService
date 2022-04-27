@@ -28,7 +28,7 @@ public class Value implements Serializable {
         this.topics = topics;
     }
 
-    public Value (String s, Address address){
+    public Value (Address address, String s){
         this.topic = s;
         this.address = address;
     }
