@@ -1,6 +1,4 @@
 
-import org.apache.cxf.service.model.BindingInfo;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -44,19 +42,17 @@ public class AppNode {
         }catch(Exception e){
             e.getStackTrace();
         }
-        Publisher pub = new Publisher(address, "Test Channel Name");
-        Consumer con = new Consumer(address);
 
         System.out.println("Enter Publisher Channel Name:  ");
         String channelName =  new BufferedReader(new InputStreamReader(System.in)).readLine();
-
+        Publisher pub = new Publisher(address, channelName);
+        Consumer con = new Consumer(address);
         //Publisher pub = new Publisher(address, channelName);
 
         System.out.print( "Welcome , select user type , 0 to exit , 1 for pub , 2 for consumer  , 3 for Updating Broker Info" );
         int type= new Scanner(System.in).nextInt();
         while( type != 0){
             // Publisher logic
-
             if(type == 1) {
                 //System.out.println("Type message to send:");
                 try {
@@ -78,32 +74,39 @@ public class AppNode {
                     }
                     pub.sendText(text,hashTags);
 
+                    System.out.println(" Select user type , 0 to exit , 1 for pub , 2 for consumer ");
+                    type = new Scanner(System.in).nextInt();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
             // Consumer Logic
-            if(type == 2){
-                try {
-                    System.out.println("Enter topics of interest: \n");
-                    String topic = new BufferedReader(new InputStreamReader(System.in)).readLine();
-                    ArrayList<String> topics_one_by_one = new ArrayList();
-                    topics_one_by_one.add(topic);
-                    System.out.println("Type end to Stop");
+            if(type == 2) {
+                System.out.println(" SELECT FROM INIT / SEARCH / UNREGISTER");
+                String action = System.console().readLine();
+                if (action.equalsIgnoreCase("init")) {
 
-                    while (!(topic.equals("end"))) {
-                        topic = new BufferedReader(new InputStreamReader(System.in)).readLine();
-                        topics_one_by_one.add(topic);
-                        System.out.println(topic + " added to topics of interest\n");
+                    try {
+
+                        System.out.println("Enter topics of interest: \n");
+                        String topic = new BufferedReader(new InputStreamReader(System.in)).readLine();
+                        ArrayList<String> topics_one_by_one = new ArrayList();
+
+                        System.out.println("Type end to Stop");
+
+                        while (!(topic.equals("end"))) {
+                            topics_one_by_one.add(topic);
+                            topic = new BufferedReader(new InputStreamReader(System.in)).readLine();
+                            System.out.println(topic + " added to topics of interest\n");
+                        }
+                        con.sendTopics(topics_one_by_one);
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
-                    con.sendTopics(topics_one_by_one);
-                }catch(IOException e){
-                    e.printStackTrace();
                 }
             }
             if(type == 3){
                 pub.getBrokerList();
-
 
             }
             System.out.println(" Select user type , 0 to exit , 1 for pub , 2 for consumer ");

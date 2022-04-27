@@ -32,11 +32,6 @@ public class Value implements Serializable {
         this.topics = topics;
     }
 
-    public Value (String s, Address address){
-        this.topic = s;
-        this.address = address;
-    }
-
     public MultimediaFile getMultimediaFile() {return multimediaFile;}
 
     public Address getAddress() {return address;}

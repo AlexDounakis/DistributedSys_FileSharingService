@@ -82,18 +82,24 @@ public class Consumer implements IConsumer {
         Runnable task = () -> {
             try {
                 System.out.println("thread started ...");
-                String ip = new BufferedReader(new InputStreamReader(System.in)).readLine();
-                int port = Integer.parseInt(new BufferedReader(new InputStreamReader(System.in)).readLine());
-                socket = new Socket(ip, port);
-                System.out.println("Connected to " + ip + ":" + port);
+                String ip;
+                int port;
+                ArrayList<String> temp = new ArrayList();
+                for (int i = 0; i < topics.size(); i++) {
+                    ip = new BufferedReader(new InputStreamReader(System.in)).readLine();
+                    port = Integer.parseInt(new BufferedReader(new InputStreamReader(System.in)).readLine());
+                    socket = new Socket(ip, port);
+                    System.out.println("Connected to " + ip + ":" + port);
 
-                ObjectOutputStream service_out = new ObjectOutputStream(socket.getOutputStream());
-                ObjectInputStream service_in = new ObjectInputStream(socket.getInputStream());
+                    ObjectOutputStream service_out = new ObjectOutputStream(socket.getOutputStream());
+                    ObjectInputStream service_in = new ObjectInputStream(socket.getInputStream());
+                    temp.add(topics.get(i));
+                    service_out.writeObject(new Value(this.addr, temp));
+                    temp.clear();
+                    service_out.flush();
 
-                service_out.writeObject(new Value(this.addr, topics));
-                service_out.flush();
-
-                System.out.println("Con .flush()");
+                    System.out.println("Con .flush()");
+                }
 
             } catch (Exception e) {
                 e.getStackTrace();
