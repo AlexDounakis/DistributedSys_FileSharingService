@@ -38,6 +38,8 @@ public class AppNode {
         }catch(Exception e){
             e.getStackTrace();
         }
+        Publisher pub = new Publisher(address, "Test Channel Name");
+        Consumer con = new Consumer(address);
 
         System.out.print( "Welcome , select user type , 0 to exit , 1 for pub , 2 for consumer " );
         int type= new Scanner(System.in).nextInt();
@@ -46,8 +48,6 @@ public class AppNode {
             if(type == 1) {
                 //System.out.println("Type message to send:");
                 try {
-
-                    Publisher pub = new Publisher(address, "Test Channel Name");
 
                     // upload
                     //pub.init(5);
@@ -79,9 +79,28 @@ public class AppNode {
                 if(action.equalsIgnoreCase("init")) {
 //                    new Consumer(address, port, action);
 //                    init = true;
+                    try {
+
+                        System.out.println("Enter topics of interest: \n");
+                        String topic = new BufferedReader(new InputStreamReader(System.in)).readLine();
+                        ArrayList<String> topics_one_by_one = new ArrayList();
+                        topics_one_by_one.add(topic);
+                        System.out.println("Type end to Stop");
+
+                        while(!(topic.equals("end"))){
+                            topic = new BufferedReader(new InputStreamReader(System.in)).readLine();
+                            topics_one_by_one.add(topic);
+                            System.out.println(topic + " added to topics of interest\n");
+                        }
+                        con.sendTopics(topics_one_by_one);
+
+                        System.out.println(" Select user type , 0 to exit , 1 for pub , 2 for consumer ");
+                        type = new Scanner(System.in).nextInt();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
-
         }
         System.out.println("APP NODE EXITING");
 

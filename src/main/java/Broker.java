@@ -19,16 +19,7 @@ public class Broker implements INode{
     private Socket socket;
     private ServerSocket serverSocket;
 
-    protected Map<Address, ArrayList<String>> brokerTopics = new ConcurrentHashMap<Address, ArrayList<String>>();
-//    protected Map<Address, ArrayList<String>> brokerTopics() {
-//        return Broker.brokerTopics;
-//    }
-//    private HashMap<Address,ArrayList<String>> brokersList = new HashMap<>() {
-//        {
-//            put(new Address("192.281.1.1",9000) , new ArrayList<>() {{ add("nice1") ; add("topic1") ; }});
-//
-//        }
-//    };
+
 
     // Registered Publishers and Consumers with topics
     private HashMap<Address,ArrayList<String>> registeredPublishers;
@@ -203,6 +194,7 @@ public class Broker implements INode{
                     System.out.println("Address:" + initClients.get(initClients.size()-1) +" is initialized... \n" );
                 }else{
                        updatePublishers(val);
+                       updateConsumers(val);
                        updateNodes(val);
                        updateBrokerInfo();
                 }
@@ -326,5 +318,23 @@ public class Broker implements INode{
                 }
             }
         }
+    }
+    void updateConsumers(Value value){
+
+        // We already have the consumer registered to Broker
+        if(registeredConsumers.containsKey(value.getAddress())){
+            registeredConsumers.get(value.getAddress())
+                    .addAll(value.getTopics());
+            System.out.println("Con updated ....");
+        }else {
+            // Publisher not registered to Broker
+            registeredConsumers.put(value.getAddress(),  value.getTopics());
+            System.out.println("Con is now registered...");
+        }
+
+        registeredConsumers.forEach((k,v)
+                -> System.out.println("Consumers Address: " + k + "  Topics: " +v)
+        );
+
     }
 }
