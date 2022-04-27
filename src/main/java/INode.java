@@ -1,3 +1,5 @@
+import org.apache.cxf.jaxrs.ext.Nullable;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -10,6 +10,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 
@@ -24,8 +25,9 @@ public class AppNode {
     protected static Address address = null;
 
     private int action ;
-    private boolean initialized = false;
 
+    /// USERS BROKER LIST
+    public static HashMap<Address , ArrayList<String>> brokersList;
 
     public static void main (String args[]) throws IOException {
 

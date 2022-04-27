@@ -25,7 +25,7 @@ public class Publisher extends Thread implements IPublisher, Runnable {
     private Value value;
 
     //ProfileName profileName;
-    private HashMap<Address , ArrayList<String>> brokersList;
+
 
     protected ArrayList<Address> brokers = new ArrayList<>(Arrays.asList(
             /// first random broker IP and Port
@@ -154,8 +154,8 @@ public class Publisher extends Thread implements IPublisher, Runnable {
                 service_out.writeObject(new Value(this.addr));
                 service_out.flush();
 
-                brokersList = (HashMap) service_in.readObject();
-                brokersList.forEach((k,v)
+                AppNode.brokersList = (HashMap) service_in.readObject();
+                AppNode.brokersList.forEach((k,v)
                         -> System.out.println("Address: " + k + "   Topics:" +  v)
                 );
             }catch(Exception e){
@@ -206,11 +206,12 @@ public class Publisher extends Thread implements IPublisher, Runnable {
 
                 service_out.writeObject(new Value(this.addr,"get brokers"));
                 service_out.flush();
-                brokersList = (HashMap) service_in.readObject();
+                AppNode.brokersList = (HashMap) service_in.readObject();
                 //System.out.println("HashMap Read:\n");
-                brokersList.forEach((k,v)
+                AppNode.brokersList.forEach((k,v)
                         -> System.out.println("Address: " + k + "   Topics:" +  v)
                 );
+
                 socket.close();
             }catch(IOException | ClassNotFoundException e){
                 e.printStackTrace();
