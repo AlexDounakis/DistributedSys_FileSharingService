@@ -9,6 +9,7 @@ public class Value implements Serializable {
     private ArrayList<String> topics;
     private Address address;
     private String action = null;
+    private String topic;
 
     public Value (MultimediaFile m) {
         this.multimediaFile = m;
@@ -31,6 +32,11 @@ public class Value implements Serializable {
         this.topics = topics;
     }
 
+    public Value (String s, Address address){
+        this.topic = s;
+        this.address = address;
+    }
+
     public MultimediaFile getMultimediaFile() {return multimediaFile;}
 
     public Address getAddress() {return address;}
@@ -42,6 +48,8 @@ public class Value implements Serializable {
     public String getAction(){
         return action;
     }
+
+    public String getTopic() {return topic;}
 
     //@Override
     //public String toString() {return this.multimediaFile +" , "+this.address;}

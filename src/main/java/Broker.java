@@ -93,6 +93,7 @@ public class Broker implements INode{
     /// Broker init() is responsible serving the client(either pub or cons), the brokersList {< <Ip,Port>,ArrayList<String>(Topics) >}
     @Override
     public void init(int x){}
+
     @Override
     public void updateNodes(Value value) {
 
@@ -142,8 +143,6 @@ public class Broker implements INode{
             out.flush();
 
             System.out.println("Broker send info to Zookeeper");
-
-
         }catch (IOException e){
             e.printStackTrace();
         }
@@ -164,6 +163,8 @@ public class Broker implements INode{
 
         @Override
         public void run(){
+
+
             try{
                 System.out.println("Server Thread For Pub Triggered");
 
@@ -171,7 +172,6 @@ public class Broker implements INode{
                 service_in = new ObjectInputStream(socket.getInputStream());
 
                 Value val = (Value)service_in.readObject();
-
                 if(!initClients.contains(val.getAddress())){
                     init();
                     initClients.add(val.getAddress());
@@ -202,6 +202,7 @@ public class Broker implements INode{
 
                 service_out.writeObject(new HashMap<>(getBrokerList()));
                 service_out.flush();
+
             }catch(IOException e){
                 e.printStackTrace();
             }
@@ -304,5 +305,23 @@ public class Broker implements INode{
                 }
             }
         }
+    }
+    void updateConsumers(Value value){
+
+        // We already have the consumer registered to Broker
+        if(registeredConsumers.containsKey(value.getAddress())){
+            registeredConsumers.get(value.getAddress())
+                    .addAll(value.getTopics());
+            System.out.println("Con updated ....");
+        }else {
+            // Publisher not registered to Broker
+            registeredConsumers.put(value.getAddress(),  value.getTopics());
+            System.out.println("Con is now registered...");
+        }
+
+        registeredConsumers.forEach((k,v)
+                -> System.out.println("Consumers Address: " + k + "  Topics: " +v)
+        );
+
     }
 }

@@ -44,11 +44,13 @@ public class AppNode {
         }catch(Exception e){
             e.getStackTrace();
         }
+        Publisher pub = new Publisher(address, "Test Channel Name");
+        Consumer con = new Consumer(address);
 
         System.out.println("Enter Publisher Channel Name:  ");
         String channelName =  new BufferedReader(new InputStreamReader(System.in)).readLine();
 
-        Publisher pub = new Publisher(address, channelName);
+        //Publisher pub = new Publisher(address, channelName);
 
         System.out.print( "Welcome , select user type , 0 to exit , 1 for pub , 2 for consumer  , 3 for Updating Broker Info" );
         int type= new Scanner(System.in).nextInt();
@@ -59,7 +61,8 @@ public class AppNode {
                 //System.out.println("Type message to send:");
                 try {
 
-
+                    // upload
+                    //pub.init(5);
                     System.out.println("Enter text to share: \n");
                     String text = new BufferedReader(new InputStreamReader(System.in)).readLine();
 
@@ -81,15 +84,26 @@ public class AppNode {
             }
             // Consumer Logic
             if(type == 2){
-                System.out.println(" SELECT FROM INIT / SEARCH / UNREGISTER");
-                String action = System.console().readLine();
-                if(action.equalsIgnoreCase("init")) {
-//                    new Consumer(address, port, action);
-//                    init = true;
+                try {
+                    System.out.println("Enter topics of interest: \n");
+                    String topic = new BufferedReader(new InputStreamReader(System.in)).readLine();
+                    ArrayList<String> topics_one_by_one = new ArrayList();
+                    topics_one_by_one.add(topic);
+                    System.out.println("Type end to Stop");
+
+                    while (!(topic.equals("end"))) {
+                        topic = new BufferedReader(new InputStreamReader(System.in)).readLine();
+                        topics_one_by_one.add(topic);
+                        System.out.println(topic + " added to topics of interest\n");
+                    }
+                    con.sendTopics(topics_one_by_one);
+                }catch(IOException e){
+                    e.printStackTrace();
                 }
             }
             if(type == 3){
                 pub.getBrokerList();
+
 
             }
             System.out.println(" Select user type , 0 to exit , 1 for pub , 2 for consumer ");

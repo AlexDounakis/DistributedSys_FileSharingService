@@ -37,8 +37,6 @@ public class Publisher extends Thread implements IPublisher, Runnable {
     public Publisher(Address _addr , String _channelName){
         this.addr = _addr;
         this.channelName = _channelName;
-        init(5);
-
     }
 
     public static void main (String args[]) throws TikaException, IOException, SAXException {
