@@ -162,7 +162,7 @@ public class Publisher extends Thread implements IPublisher, Runnable {
                 ObjectOutputStream service_out = new ObjectOutputStream(socket.getOutputStream());
                 ObjectInputStream service_in = new ObjectInputStream(socket.getInputStream());
 
-                service_out.writeObject(new Value(this.addr));
+                service_out.writeObject(new Value(this.addr,SenderType.PUBLISHER));
                 service_out.flush();
 
                 AppNode.brokersList = (HashMap) service_in.readObject();
@@ -215,7 +215,7 @@ public class Publisher extends Thread implements IPublisher, Runnable {
                 ObjectOutputStream service_out = new ObjectOutputStream(socket.getOutputStream());
                 ObjectInputStream service_in = new ObjectInputStream(socket.getInputStream());
 
-                service_out.writeObject(new Value(this.addr,"get brokers"));
+                service_out.writeObject(new Value(this.addr,"get brokers",SenderType.PUBLISHER));
                 service_out.flush();
                 AppNode.brokersList = (HashMap) service_in.readObject();
                 //System.out.println("HashMap Read:\n");

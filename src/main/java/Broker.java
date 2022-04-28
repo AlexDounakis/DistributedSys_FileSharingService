@@ -53,7 +53,7 @@ public class Broker implements INode{
         Ip = inetAddress.getHostAddress();
         System.out.println(Ip);
         address = new Address(Ip,port);
-        topics.add("test_topic");
+
         new Broker(Ip , port);
     }
 
@@ -61,7 +61,6 @@ public class Broker implements INode{
     // start new thread for each connection
     // serverThread.start()
     public void connect(){
-
         try{
             System.out.println("Server Socket Up and Running ...\n");
             while(true){
@@ -69,13 +68,30 @@ public class Broker implements INode{
                 socket = serverSocket.accept();
                 System.out.println("socket.accept()\n");
 
-                new Thread(new publisherThread(socket))
-                        .start();
+                Runnable task = () -> {
+                    try {
+                        ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+                        ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
 
-//                Thread threadConsumer = new consumerThread(socket);
-//                threadConsumer.start();
-//                System.out.println("cons thread.start()\n");
-                //System.out.println("Server Thread started ...\n");
+                        Value value = (Value)in.readObject();
+
+                        if(value.sender == SenderType.PUBLISHER){
+                            new Thread(new publisherThread(socket , in , out ,value))
+                                    .start();
+                            System.out.println("pub thread.start()\n");
+                        }else{
+                            new Thread(new consumerThread(socket , in , out,value))
+                                    .start();
+                            System.out.println("cons thread.start()\n");
+                        }
+
+                    } catch (IOException | ClassNotFoundException e) {
+                        e.printStackTrace();
+                    }
+
+
+                };
+                new Thread(task).start();
             }
 
         }catch (IOException  e) { //| ClassNotFoundException
@@ -90,14 +106,11 @@ public class Broker implements INode{
             }
         }
     }
-
     /// Broker init() is responsible serving the client(either pub or cons), the brokersList {< <Ip,Port>,ArrayList<String>(Topics) >}
     @Override
     public void init(int x){
-
         updateBrokerInfo();
     }
-
     @Override
     public void updateNodes(Value value) {
 
@@ -143,7 +156,7 @@ public class Broker implements INode{
             out.writeObject("insert or update broker");
             out.flush();
 
-            out.writeObject(new Value(address , topics));
+            out.writeObject(new Value(address , topics,SenderType.BROKER));
             out.flush();
 
             System.out.println("Broker send info to Zookeeper");
@@ -151,6 +164,41 @@ public class Broker implements INode{
             e.printStackTrace();
         }
 
+    }
+
+    public void pull(Socket consumerSocket , Address pubAddress , ArrayList<String> topics){
+        ObjectInputStream pub_in;
+        ObjectOutputStream pub_out;
+
+        ObjectInputStream cons_in;
+        ObjectOutputStream cons_out;
+
+        MultimediaFile chunk;
+
+        try{
+            Socket pubSocket = new Socket(pubAddress.getIp(),pubAddress.getPort());
+
+            pub_in = new ObjectInputStream(pubSocket.getInputStream());
+            pub_out = new ObjectOutputStream(pubSocket.getOutputStream());
+
+            pub_out.writeObject(topics);
+            pub_out.flush();
+
+            cons_out = new ObjectOutputStream(consumerSocket.getOutputStream());
+            cons_in = new ObjectInputStream(consumerSocket.getInputStream());
+
+            while(true){
+                chunk = (MultimediaFile)pub_in.readObject();
+                cons_out.writeObject(chunk);
+                if(chunk.IsLast){
+                    System.out.println("Received all chunks");
+                    break;
+                }
+            }
+
+        }catch(IOException | ClassNotFoundException e){
+            e.printStackTrace();
+        }
     }
 
 ///////////////// PUBLISHER THREAD INNER CLASS///////////
@@ -161,32 +209,25 @@ public class Broker implements INode{
         private final Socket socket;
         private Value value;
 
-        public publisherThread(Socket _socket){
-            socket = _socket;
+        public publisherThread(Socket _socket, ObjectInputStream in , ObjectOutputStream out, Value value) {
+            this.socket = _socket;
+            this.value = value;
+            this.service_in = in;
+            this.service_out = out;
         }
 
         @Override
         public void run(){
-
-
             try{
                 System.out.println("Server Thread For Pub Triggered");
 
-                service_out = new ObjectOutputStream(socket.getOutputStream());
-                service_in = new ObjectInputStream(socket.getInputStream());
-
-                Value val = (Value)service_in.readObject();
-                if(!initClients.contains(val.getAddress())){
-                    init();
-                    initClients.add(val.getAddress());
-                    System.out.println("Address:" + initClients.get(initClients.size()-1) +" is initialized... \n" );
-                }else if(!(val.getAction() == null)  && val.getAction().equals("get brokers")){
+                if( value.getAction().equals("get brokers")){
                     init();
                     System.out.println("Get Brokers........");
                 }else{
-                    System.out.println(val.getAction());
-                    updateRegisteredPublishers(val);
-                    updateNodes(val);
+                    System.out.println(value.getAction());
+                    updateRegisteredPublishers(value);
+                    updateNodes(value);
                     updateBrokerInfo();
                 }
 
@@ -231,8 +272,6 @@ public class Broker implements INode{
 
         }
 
-
-
         public void replyText(){
             try{
                 System.out.println("Method replyText() triggered ... \n");
@@ -271,61 +310,83 @@ public class Broker implements INode{
 
 
     ///////////////// CONSUMER THREAD INNER CLASS///////////
-    /// run not implemented
     public class consumerThread extends Thread{
         ObjectInputStream service_in;
         ObjectOutputStream service_out;
         public Socket socket;
         private Value value;
 
-        public consumerThread(Socket _socket){
+        public consumerThread(Socket _socket , ObjectInputStream in , ObjectOutputStream out , Value value){
             this.socket = _socket;
+            this.value = value;
+            this.service_in = in;
+            this.service_out = out;
         }
 
         @Override
         public void run(){
-            System.out.println("Consumer Thread running ...\n");
+
+            ArrayList<String> requestedTopics;
+
             try{
-                service_in = new ObjectInputStream(socket.getInputStream());
-                service_out = new ObjectOutputStream(socket.getOutputStream());
 
-                value = (Value)service_in.readObject();
-                // consumer already initialized
-                if(initClients.contains(value.getAddress())){
+                System.out.println("Consumer Thread running ...\n");
+                // consumer Initialization
+                System.out.println(value.getAddress());
+                if(!initClients.contains(value.getAddress())){
 
-                }/// Consumer not Initialized
-                else{
-                    init(5);
+                    init();
                     initClients.add(value.getAddress());
-                    service_out.writeObject("USER REGISTERED");
+                    //service_out.writeObject("USER REGISTERED");
+
+                }/// Consumer Initialized
+                else{
+                    updateConsumers(value);
+
+                    requestedTopics = value.getTopics();
+                    for(Address pubAddress : registeredPublishers.keySet()){
+                        var pubTopics = registeredPublishers.get(pubAddress);
+                        if(pubTopics.stream()
+                                .anyMatch(requestedTopics::contains)){
+                            pull(socket,pubAddress,requestedTopics);
+                        }
+                    }
                 }
             }catch(Exception e){
                 e.printStackTrace();
-            }finally {
-                try {
-                    socket.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
             }
         }
-    }
-    void updateConsumers(Value value){
+        void init(){
+            try {
+//
+//                ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+//                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
 
-        // We already have the consumer registered to Broker
-        if(registeredConsumers.containsKey(value.getAddress())){
-            registeredConsumers.get(value.getAddress())
-                    .add(value.getTopic());
-            System.out.println("Con updated ....");
-        }else {
-            // Publisher not registered to Broker
-            registeredConsumers.put(value.getAddress(),  value.getTopics());
-            System.out.println("Con is now registered...");
+                service_out.writeObject(new HashMap<>(getBrokerList()));
+                service_out.flush();
+
+            }catch(IOException e){
+                e.printStackTrace();
+            }
         }
+        void updateConsumers(Value value){
 
-        registeredConsumers.forEach((k,v)
-                -> System.out.println("Consumers Address: " + k + "  Topics: " +v)
-        );
+            // We already have the consumer registered to Broker
+            if(registeredConsumers.containsKey(value.getAddress())){
+                registeredConsumers.get(value.getAddress())
+                        .add(value.getTopic());
+                System.out.println("Con updated ....");
+            }else {
+                // Publisher not registered to Broker
+                registeredConsumers.put(value.getAddress(),  value.getTopics());
+                System.out.println("Con is now registered...");
+            }
 
+            registeredConsumers.forEach((k,v)
+                    -> System.out.println("Consumers Address: " + k + "  Topics: " +v)
+            );
+
+        }
     }
+
 }
