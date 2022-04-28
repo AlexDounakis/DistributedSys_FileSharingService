@@ -14,7 +14,7 @@ public class MultimediaFile implements Serializable {
     String Framerate;
     String FrameWidth;
     String FrameHeight;
-    ArrayList<String> Hashtags;
+    ArrayList<String> Hashtags = new ArrayList<>();
     byte[] FileChunk;
     boolean IsLast = false;
 
@@ -60,7 +60,7 @@ public class MultimediaFile implements Serializable {
         this.DateCreated = dateCreated;
     }
     public MultimediaFile( String channelName , String text){
-        this.FileChunk = FileChunk;
+        //this.FileChunk = FileChunk;
         this.ChannelName = channelName;
         this.text = text;
     }
@@ -71,7 +71,7 @@ public class MultimediaFile implements Serializable {
     public void setHashtags(ArrayList<String> hashtags) {
         this.Hashtags= hashtags;
     }
-
+    public void setHashtag(String topic){this.Hashtags.add(topic);}
     public ArrayList<String> getHashtags() {
         return Hashtags;
     }

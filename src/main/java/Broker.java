@@ -74,7 +74,7 @@ public class Broker implements INode{
                         ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
 
                         Value value = (Value)in.readObject();
-
+                        System.out.println(value.sender);
                         if(value.sender == SenderType.PUBLISHER){
                             new Thread(new publisherThread(socket , in , out ,value))
                                     .start();
@@ -343,25 +343,22 @@ public class Broker implements INode{
                 else{
                     updateConsumers(value);
 
-                    requestedTopics = value.getTopics();
-                    for(Address pubAddress : registeredPublishers.keySet()){
-                        var pubTopics = registeredPublishers.get(pubAddress);
-                        if(pubTopics.stream()
-                                .anyMatch(requestedTopics::contains)){
-                            pull(socket,pubAddress,requestedTopics);
-                        }
-                    }
+//                    requestedTopics = value.getTopics();
+//                    for(Address pubAddress : registeredPublishers.keySet()){
+//                        var pubTopics = registeredPublishers.get(pubAddress);
+//                        if(pubTopics.stream()
+//                                .anyMatch(requestedTopics::contains)){
+//                            pull(socket,pubAddress,requestedTopics);
+//                        }
+//                    }
                 }
+                System.out.println("Consumer thread ended....");
             }catch(Exception e){
                 e.printStackTrace();
             }
         }
         void init(){
             try {
-//
-//                ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-//                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-
                 service_out.writeObject(new HashMap<>(getBrokerList()));
                 service_out.flush();
 
@@ -369,6 +366,7 @@ public class Broker implements INode{
                 e.printStackTrace();
             }
         }
+
         void updateConsumers(Value value){
 
             // We already have the consumer registered to Broker

@@ -74,8 +74,6 @@ public class AppNode {
                     }
                     pub.sendText(text,hashTags);
 
-                    System.out.println(" Select user type , 0 to exit , 1 for pub , 2 for consumer ");
-                    type = new Scanner(System.in).nextInt();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

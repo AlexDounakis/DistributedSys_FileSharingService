@@ -4,6 +4,7 @@ import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.mp4.MP4Parser;
 import org.apache.tika.sax.BodyContentHandler;
 import org.apache.commons.io.IOUtils;
+import org.bouncycastle.math.ec.ScaleYPointMap;
 import org.xml.sax.SAXException;
 
 import java.io.*;
@@ -62,56 +63,56 @@ public class Publisher extends Thread implements IPublisher, Runnable {
     // Create Server Socket of Publisher
     @Override
     public void run(){
-        try{
-            System.out.println("Publisher ready to push ...\n");
-            while(true){
-
-                socket = serverSocket.accept();
-                System.out.println("socket.accept()\n");
-
-                Runnable task = () -> {
-                    try {
-                        ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-                        ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-
-                        var requestedTopics = (ArrayList<String>) in.readObject();
-                        for (String topic : requestedTopics) {
-                            for (String filePath : FileCollection.keySet())
-                                if (FileCollection.get(filePath).contains(topic)) {
-                                    Value file = new Value(filePath);
-                                    push(file, FileCollection.get(filePath),out);
-                                }
-                        }
-                    } catch (IOException | ClassNotFoundException e) {
-                        e.printStackTrace();
-                    }
-                };
-                new Thread(task).start();
-            }
-        }catch (IOException  e) { //| ClassNotFoundException
-            e.printStackTrace();
-
-        } finally {
-            try {
-                // close socket connection
-                serverSocket.close();
-            } catch (IOException ioException) {
-                ioException.printStackTrace();
-            }
-        }
+//        try{
+//            System.out.println("Publisher ready to push ...\n");
+//            while(true){
+//
+//                socket = serverSocket.accept();
+//                System.out.println("socket.accept()\n");
+//
+//                Runnable task = () -> {
+//                    try {
+//                        ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+//                        ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+//
+//                        var requestedTopics = (ArrayList<String>) in.readObject();
+//                        for (String topic : requestedTopics) {
+//                            for (String filePath : FileCollection.keySet())
+//                                if (FileCollection.get(filePath).contains(topic)) {
+//                                    Value file = new Value(filePath);
+//                                    push(file, FileCollection.get(filePath),out);
+//                                }
+//                        }
+//                    } catch (IOException | ClassNotFoundException e) {
+//                        e.printStackTrace();
+//                    }
+//                };
+//                new Thread(task).start();
+//            }
+//        }catch (IOException  e) { //| ClassNotFoundException
+//            e.printStackTrace();
+//
+//        } finally {
+//            try {
+//                // close socket connection
+//                serverSocket.close();
+//            } catch (IOException ioException) {
+//                ioException.printStackTrace();
+//            }
+//        }
     }
 
     public void push(Value file, ArrayList<String> topics, ObjectOutputStream outputStream) throws TikaException, IOException, SAXException {
-
-        String path = file.getPath();
-        ArrayList<Value> chunks = generateChunks(file);
-        /*for (Value chunk : chunks) {
-            chunk.setHashtags(topics);
-        }*/
-
-        for (Value chunk : chunks) {
-            outputStream.writeObject(chunk);
-        }
+//
+//        String path = file.getPath();
+//        ArrayList<Value> chunks = generateChunks(file);
+//        /*for (Value chunk : chunks) {
+//            chunk.setHashtags(topics);
+//        }*/
+//
+//        for (Value chunk : chunks) {
+//            outputStream.writeObject(chunk);
+//        }
     }
 
     /// Extra Function
@@ -122,24 +123,24 @@ public class Publisher extends Thread implements IPublisher, Runnable {
         Runnable task = () -> {
             try {
 
-                System.out.println("thread started ...");
+
                 //hashing
                 hashTags.forEach(s
                         -> {
                     try {
                         Address address = hashTopic(s);
                         //AppNode.brokersList.put(address, ArrayList.add(s));
-                        Broker.getBrokerList().get(address).add(s);
-                        socket = new Socket(address.getIp(), address.getPort());
-                        ObjectOutputStream service_out = new ObjectOutputStream(socket.getOutputStream());
-                        ObjectInputStream service_in = new ObjectInputStream(socket.getInputStream());
+                        //Broker.getBrokerList().get(address).add(s);
+                        Socket socketBroker = new Socket(address.getIp(), address.getPort());
+                        ObjectOutputStream serv_out = new ObjectOutputStream(socketBroker.getOutputStream());
 
                         MultimediaFile file =new MultimediaFile(this.channelName,text);
-                        file.setHashtags(hashTags);
+                        file.setHashtag(s);
 
-                        service_out.writeObject(new Value( file,this.addr, SenderType.PUBLISHER));
-                        System.out.println("Pub .flush()");
-                        service_out.flush();
+                        serv_out.writeObject(new Value( file,this.addr, SenderType.PUBLISHER));
+                        serv_out.flush();
+
+                        System.out.println("Thread sending text ended ....");
 
 
                     } catch (NoSuchAlgorithmException | IOException e) {
@@ -283,20 +284,23 @@ public class Publisher extends Thread implements IPublisher, Runnable {
         int mod = result.intValue();
         switch (mod) {
             case 0 -> {
-                System.out.println("Broker 1 will handle this topic.");
+                System.out.println("Broker 1 will handle topic:" + topic);
                 System.out.println(Broker.getBrokerList().keySet().toArray()[0]);
-                return (Address) Broker.getBrokerList().keySet().toArray()[0];
+                return (Address)Broker.getBrokerList().keySet().toArray()[0];
+//                return (Address) Broker.getBrokerList().keySet().toArray()[0];
             }
             case 1 -> {
-                System.out.println("Broker 2 will handle this topic.");
+                System.out.println("Broker 2 will handle topic:" + topic);
                 System.out.println(Broker.getBrokerList().keySet().toArray()[1]);
                 return (Address) Broker.getBrokerList().keySet().toArray()[1];
             }
             case 2 -> {
-                System.out.println("Broker 3 will handle this topic.");
+                System.out.println("Broker 3 will handle topic:" + topic);
                 System.out.println(Broker.getBrokerList().keySet().toArray()[2]);
                 return (Address) Broker.getBrokerList().keySet().toArray()[2];
             }
+//            AppNode.brokersList.forEach((k,v)
+//                    -> System.out.println( "Address:"+ k + "something"+ v));
         }
 
 
