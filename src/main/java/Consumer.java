@@ -3,7 +3,6 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 
 public class Consumer implements IConsumer {
 
@@ -82,24 +81,38 @@ public class Consumer implements IConsumer {
         Runnable task = () -> {
             try {
                 System.out.println("thread started ...");
-                String ip;
-                int port;
                 ArrayList<String> temp = new ArrayList();
-                for (int i = 0; i < topics.size(); i++) {
-                    ip = new BufferedReader(new InputStreamReader(System.in)).readLine();
-                    port = Integer.parseInt(new BufferedReader(new InputStreamReader(System.in)).readLine());
-                    socket = new Socket(ip, port);
-                    System.out.println("Connected to " + ip + ":" + port);
+                    //get address from brokers list hashmap
+                    topics.forEach(s ->
+                            AppNode.brokersList.forEach((k,t)
+                                    -> {
+                                if(t.contains(s)){
+                                    temp.add(s);
+                                    try {
+                                        socket = new Socket(k.getIp(), k.getPort());
+                                        System.out.println("Connected to " + k.getIp() + ":" + k.getPort());
 
-                    ObjectOutputStream service_out = new ObjectOutputStream(socket.getOutputStream());
-                    ObjectInputStream service_in = new ObjectInputStream(socket.getInputStream());
-                    temp.add(topics.get(i));
-                    service_out.writeObject(new Value(this.addr, temp));
-                    temp.clear();
-                    service_out.flush();
+                                        ObjectOutputStream service_out = new ObjectOutputStream(socket.getOutputStream());
+                                        ObjectInputStream service_in = new ObjectInputStream(socket.getInputStream());
 
-                    System.out.println("Con .flush()");
-                }
+                                        service_out.writeObject(new Value(this.addr, temp));
+                                        temp.clear();
+                                        service_out.flush();
+
+                                        System.out.println("Con .flush()");
+                                    }catch(Exception e){
+                                        e.printStackTrace();
+                                    }try{
+                                        socket.close();
+                                        System.out.println("Thread for init closed...");
+                                    }catch (IOException e){
+                                        e.printStackTrace();
+                                    }
+                                }
+                            })
+                    );
+
+
 
             } catch (Exception e) {
                 e.getStackTrace();

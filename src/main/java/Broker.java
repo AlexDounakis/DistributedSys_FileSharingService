@@ -41,6 +41,7 @@ public class Broker implements INode{
         initClients = new ArrayList<>();
         registeredConsumers = new HashMap<>();
         registeredPublishers = new HashMap<>();
+        init(5);
         connect();
 
     }
@@ -52,7 +53,7 @@ public class Broker implements INode{
         Ip = inetAddress.getHostAddress();
         System.out.println(Ip);
         address = new Address(Ip,port);
-
+        topics.add("test_topic");
         new Broker(Ip , port);
     }
 
@@ -92,7 +93,10 @@ public class Broker implements INode{
 
     /// Broker init() is responsible serving the client(either pub or cons), the brokersList {< <Ip,Port>,ArrayList<String>(Topics) >}
     @Override
-    public void init(int x){}
+    public void init(int x){
+
+        updateBrokerInfo();
+    }
 
     @Override
     public void updateNodes(Value value) {

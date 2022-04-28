@@ -83,7 +83,9 @@ public class AppNode {
             // Consumer Logic
             if(type == 2) {
                 System.out.println(" SELECT FROM INIT / SEARCH / UNREGISTER");
-                String action = System.console().readLine();
+                //String action = System.console().readLine();
+                Scanner in = new Scanner(System.in);
+                String action = in.nextLine();
                 if (action.equalsIgnoreCase("init")) {
 
                     try {

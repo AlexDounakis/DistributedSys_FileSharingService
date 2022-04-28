@@ -1,5 +1,3 @@
-import com.uwyn.jhighlight.fastutil.Hash;
-import net.didion.jwnl.data.Exc;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.ParseContext;
@@ -13,7 +11,12 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
+
+
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.atomic.AtomicReference;
 
 //public class Publisher extends AppNode extends Thread implements IPublisher implements Runnable {
 public class Publisher extends Thread implements IPublisher, Runnable {
@@ -75,22 +78,32 @@ public class Publisher extends Thread implements IPublisher, Runnable {
     // sendText summons a thread to deal with passing through a message - reading the response
     public void sendText(String _text , ArrayList<String> hashTags){
         this.text = _text;
-
         // Thread .run() - thread functionality
         Runnable task = () -> {
             try {
+
                 System.out.println("thread started ...");
+                //hashing
+                hashTags.forEach(s
+                        -> {
+                    try {
+                        Address address = hashTopic(s);
+                        socket = new Socket(address.getIp(), address.getPort());
+                        ObjectOutputStream service_out = new ObjectOutputStream(socket.getOutputStream());
+                        ObjectInputStream service_in = new ObjectInputStream(socket.getInputStream());
 
-                socket = new Socket(brokers.get(0).getIp(), brokers.get(0).getPort());
-                ObjectOutputStream service_out = new ObjectOutputStream(socket.getOutputStream());
-                ObjectInputStream service_in = new ObjectInputStream(socket.getInputStream());
+                        MultimediaFile file =new MultimediaFile(this.channelName,text);
+                        file.setHashtags(hashTags);
 
-                MultimediaFile file =new MultimediaFile(this.channelName,text);
-                file.setHashtags(hashTags);
+                        service_out.writeObject(new Value( file,this.addr));
+                        System.out.println("Pub .flush()");
+                        service_out.flush();
 
-                service_out.writeObject(new Value( file,this.addr));
-                System.out.println("Pub .flush()");
-                service_out.flush();
+
+                    } catch (NoSuchAlgorithmException | IOException e) {
+                        e.printStackTrace();
+                    }
+                });
 
             } catch (Exception e) {
                 e.getStackTrace();
@@ -217,8 +230,33 @@ public class Publisher extends Thread implements IPublisher, Runnable {
         };
         new Thread(task).start();
     }
+
     @Override
-    public Broker hashTopic(String s) { return new Broker("some_ip", 123); }
+    public Address hashTopic(String topic) throws NoSuchAlgorithmException {
+        MessageDigest digest = MessageDigest.getInstance("MD5");
+        digest.update(topic.getBytes(), 0, topic.length());
+        String md5 = new BigInteger(1, digest.digest()).toString(16);
+        BigInteger decimal = new BigInteger(md5, 16);
+        BigInteger result = decimal.mod(BigInteger.valueOf(3));
+        int mod = result.intValue();
+        switch (mod) {
+            case 0 -> {
+                System.out.println("Broker 1 will handle this topic.");
+                return (Address) AppNode.brokersList.keySet().toArray()[0];
+            }
+            case 1 -> {
+                System.out.println("Broker 2 will handle this topic.");
+                return (Address) AppNode.brokersList.keySet().toArray()[1];
+            }
+            case 2 -> {
+                System.out.println("Broker 3 will handle this topic.");
+                return (Address) AppNode.brokersList.keySet().toArray()[2];
+            }
+        }
+
+
+        return null;
+    }
     @Override
     public void notifyBrokersNewMessage(String s) {}
     @Override
