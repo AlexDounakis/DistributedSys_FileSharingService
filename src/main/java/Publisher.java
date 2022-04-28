@@ -88,7 +88,6 @@ public class Publisher extends Thread implements IPublisher, Runnable {
                         -> {
                     try {
                         Address address = hashTopic(s);
-                        //AppNode.brokersList.put(address, ArrayList.add(s));
                         Broker.getBrokerList().get(address).add(s);
                         socket = new Socket(address.getIp(), address.getPort());
                         ObjectOutputStream service_out = new ObjectOutputStream(socket.getOutputStream());
