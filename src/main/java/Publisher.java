@@ -88,6 +88,8 @@ public class Publisher extends Thread implements IPublisher, Runnable {
                         -> {
                     try {
                         Address address = hashTopic(s);
+                        //AppNode.brokersList.put(address, ArrayList.add(s));
+                        Broker.getBrokerList().get(address).add(s);
                         socket = new Socket(address.getIp(), address.getPort());
                         ObjectOutputStream service_out = new ObjectOutputStream(socket.getOutputStream());
                         ObjectInputStream service_in = new ObjectInputStream(socket.getInputStream());
@@ -95,7 +97,7 @@ public class Publisher extends Thread implements IPublisher, Runnable {
                         MultimediaFile file =new MultimediaFile(this.channelName,text);
                         file.setHashtags(hashTags);
 
-                        service_out.writeObject(new Value( file,this.addr));
+                        service_out.writeObject(new Value( file,this.addr, SenderType.PUBLISHER));
                         System.out.println("Pub .flush()");
                         service_out.flush();
 
@@ -242,15 +244,18 @@ public class Publisher extends Thread implements IPublisher, Runnable {
         switch (mod) {
             case 0 -> {
                 System.out.println("Broker 1 will handle this topic.");
-                return (Address) AppNode.brokersList.keySet().toArray()[0];
+                System.out.println(Broker.getBrokerList().keySet().toArray()[0]);
+                return (Address) Broker.getBrokerList().keySet().toArray()[0];
             }
             case 1 -> {
                 System.out.println("Broker 2 will handle this topic.");
-                return (Address) AppNode.brokersList.keySet().toArray()[1];
+                System.out.println(Broker.getBrokerList().keySet().toArray()[1]);
+                return (Address) Broker.getBrokerList().keySet().toArray()[1];
             }
             case 2 -> {
                 System.out.println("Broker 3 will handle this topic.");
-                return (Address) AppNode.brokersList.keySet().toArray()[2];
+                System.out.println(Broker.getBrokerList().keySet().toArray()[2]);
+                return (Address) Broker.getBrokerList().keySet().toArray()[2];
             }
         }
 
