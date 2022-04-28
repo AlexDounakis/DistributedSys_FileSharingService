@@ -7,6 +7,7 @@ import org.apache.commons.io.IOUtils;
 import org.xml.sax.SAXException;
 
 import java.io.*;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,6 +23,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class Publisher extends Thread implements IPublisher, Runnable {
 
     private Socket socket;
+    private ServerSocket serverSocket;
     public Address addr;
     public String channelName;
     public String text;
@@ -59,17 +61,55 @@ public class Publisher extends Thread implements IPublisher, Runnable {
 
     // Create Server Socket of Publisher
     @Override
-    public void run(){ }
+    public void run(){
+        try{
+            System.out.println("Publisher ready to push ...\n");
+            while(true){
 
-    public void push(File file, ArrayList<String> topics, ObjectOutputStream outputStream) throws TikaException, IOException, SAXException {
+                socket = serverSocket.accept();
+                System.out.println("socket.accept()\n");
 
-        String path = file.getAbsolutePath();
-        ArrayList<MultimediaFile> chunks = generateChunks(file);
-        for (MultimediaFile chunk : chunks) {
-            chunk.setHashtags(topics);
+                Runnable task = () -> {
+                    try {
+                        ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+                        ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+
+                        var requestedTopics = (ArrayList<String>) in.readObject();
+                        for (String topic : requestedTopics) {
+                            for (String filePath : FileCollection.keySet())
+                                if (FileCollection.get(filePath).contains(topic)) {
+                                    Value file = new Value(filePath);
+                                    push(file, FileCollection.get(filePath),out);
+                                }
+                        }
+                    } catch (IOException | ClassNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                };
+                new Thread(task).start();
+            }
+        }catch (IOException  e) { //| ClassNotFoundException
+            e.printStackTrace();
+
+        } finally {
+            try {
+                // close socket connection
+                serverSocket.close();
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
         }
+    }
 
-        for (MultimediaFile chunk : chunks) {
+    public void push(Value file, ArrayList<String> topics, ObjectOutputStream outputStream) throws TikaException, IOException, SAXException {
+
+        String path = file.getPath();
+        ArrayList<Value> chunks = generateChunks(file);
+        /*for (Value chunk : chunks) {
+            chunk.setHashtags(topics);
+        }*/
+
+        for (Value chunk : chunks) {
             outputStream.writeObject(chunk);
         }
     }
