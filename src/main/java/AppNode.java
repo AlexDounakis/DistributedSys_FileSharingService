@@ -3,10 +3,12 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Array;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 
@@ -20,9 +22,12 @@ public class AppNode {
     static InetAddress inetAddress;
     protected static Address address = null;
 
-    public int action ;
+    private int action ;
 
-    public static void main (String args[]){
+    /// USERS BROKER LIST
+    public static HashMap<Address , ArrayList<String>> brokersList;
+
+    public static void main (String args[]) throws IOException {
 
 
         // get localhost IP and port num;
@@ -38,24 +43,69 @@ public class AppNode {
             e.getStackTrace();
         }
 
-        System.out.print( "HI , SELECT YOUR ACTIONS ,0 to exit ,  1 for pub" );
+        System.out.println("Enter Publisher Channel Name:  ");
+        String channelName =  new BufferedReader(new InputStreamReader(System.in)).readLine();
+        Publisher pub = new Publisher(address, channelName);
+        Consumer con = new Consumer(address);
+        //Publisher pub = new Publisher(address, channelName);
+
+        System.out.print( "Welcome , select user type , 0 to exit , 1 for pub , 2 for consumer  , 3 for Updating Broker Info" );
         int type= new Scanner(System.in).nextInt();
         while( type != 0){
-            System.out.println("Hi, type text to send:");
+            // Publisher logic
+            if(type == 1) {
+                //System.out.println("Type message to send:");
+                try {
 
-            try{
-                String text =new BufferedReader(new InputStreamReader(System.in)).readLine();
-                Publisher pub = new Publisher(address,"Test Channel Name");
+                    // upload
+                    //pub.init(5);
+                    System.out.println("Enter text to share: \n");
+                    String text = new BufferedReader(new InputStreamReader(System.in)).readLine();
 
-                pub.sendText(text);
+                    System.out.println("Enter HashTag ...  type end to Stop");
+                    ArrayList<String> hashTags = new ArrayList();
+                    BufferedReader br  = new BufferedReader(new InputStreamReader(System.in));
+                    String hashtag;
+                    //!hashtag.readLine().equalsIgnoreCase("end")
+                    while(!(hashtag = br.readLine()).equals("end")){
 
-                System.out.println("HI , SELECT YOUR ACTIONS ,0 to exit ,  1 for consumer , 2 for pub");
-                type = new Scanner(System.in).nextInt();
-            }catch(Exception e ){
-                e.printStackTrace();
+                        hashTags.add(hashtag);
+                        System.out.println(hashtag + " added to hashtags\n");
+                    }
+                    pub.sendText(text,hashTags);
+
+                    System.out.println(" Select user type , 0 to exit , 1 for pub , 2 for consumer ");
+                    type = new Scanner(System.in).nextInt();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            // Consumer Logic
+            if(type == 2) {
+                try {
+                    System.out.println("Enter topics of interest: \n");
+                    String topic = new BufferedReader(new InputStreamReader(System.in)).readLine();
+                    ArrayList<String> topics_one_by_one = new ArrayList();
+
+                    System.out.println("Type end to Stop");
+
+                    while (!(topic.equals("end"))) {
+                        topics_one_by_one.add(topic);
+                        topic = new BufferedReader(new InputStreamReader(System.in)).readLine();
+                        System.out.println(topic + " added to topics of interest\n");
+                    }
+                    con.sendTopics(topics_one_by_one);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
 
+            if(type == 3){
+                pub.getBrokerList();
 
+            }
+            System.out.println(" Select user type , 0 to exit , 1 for pub , 2 for consumer ");
+            type = new Scanner(System.in).nextInt();
         }
         System.out.println("APP NODE EXITING");
 

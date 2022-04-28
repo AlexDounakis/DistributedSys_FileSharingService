@@ -1,9 +1,10 @@
 import java.io.File;
+import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
-public class MultimediaFile {
+public class MultimediaFile implements Serializable {
 
     String AbsolutePath;
     String FileName;
@@ -16,6 +17,8 @@ public class MultimediaFile {
     ArrayList<String> Hashtags;
     byte[] FileChunk;
     boolean IsLast = false;
+
+    String text;
 
 
     //Video Constructor
@@ -55,6 +58,11 @@ public class MultimediaFile {
         this.FileName =fileName;
         this.ChannelName = channelName;
         this.DateCreated = dateCreated;
+    }
+    public MultimediaFile( String channelName , String text){
+        this.FileChunk = FileChunk;
+        this.ChannelName = channelName;
+        this.text = text;
     }
 
     public String getVideoName() {

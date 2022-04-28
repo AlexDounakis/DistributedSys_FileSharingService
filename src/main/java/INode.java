@@ -1,3 +1,5 @@
+import org.apache.cxf.jaxrs.ext.Nullable;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -5,7 +7,7 @@ import java.util.List;
 
 public interface INode {
 
-    //static  final Address SynchronisedMessagingServiceAddress = new Address("127.0.0.1",6000);
+    static  final Address ZookeeperAddress = new Address("127.0.0.1",5000);
 
     //void init(Request request) throws IOException;
 
@@ -17,6 +19,6 @@ public interface INode {
     void connect();
     void disconnect();
     void init(int x);
-    void updateNodes();
+    void updateNodes(Value value);
 
 }

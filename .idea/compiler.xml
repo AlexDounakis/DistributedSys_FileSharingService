@@ -10,5 +10,8 @@
         <module name="DistributedSys_FileSharingService" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="EventDeliverySystem_2" target="15" />
+    </bytecodeTargetLevel>
   </component>
 </project>
