@@ -80,6 +80,8 @@ public class MultimediaFile implements Serializable {
             Hashtags.add(hashtag);
     }
 
+    public String getAbsolutePath() {return AbsolutePath;}
+
     public void setIsLast(boolean isLast){
         this.IsLast = isLast;
     }

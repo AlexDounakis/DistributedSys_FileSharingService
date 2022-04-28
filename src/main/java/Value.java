@@ -53,6 +53,8 @@ public class Value implements Serializable {
 
     public String getTopic() {return topic;}
 
+    public String getPath() {return multimediaFile.getAbsolutePath();}
+
     //@Override
     //public String toString() {return this.multimediaFile +" , "+this.address;}
 }
