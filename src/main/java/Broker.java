@@ -23,7 +23,7 @@ public class Broker implements INode{
     private HashMap<Address,ArrayList<String>> registeredPublishers;
     private HashMap<Address,ArrayList<String>>  registeredConsumers;
     // Total of initialized Clients , we dont keep track of topics etc.
-    private ArrayList<Address> initClients;
+
 
     // this list includes both channel names and specific topics
     public static ArrayList<String> topics = new ArrayList<>();
@@ -38,7 +38,6 @@ public class Broker implements INode{
         } catch (IOException e) {
             e.printStackTrace();
         }
-        initClients = new ArrayList<>();
         registeredConsumers = new HashMap<>();
         registeredPublishers = new HashMap<>();
         init(5);
@@ -114,8 +113,12 @@ public class Broker implements INode{
     @Override
     public void updateNodes(Value value) {
 
+        System.out.println("1 PRINTING TOPICS FOR:"+port);
+        topics.stream().forEach( e -> System.out.println(e));
         //topics.stream().forEach(t -> t.equalsIgnoreCase(value.getMultimediaFile().Hashtags.stream().forEach();));
-        topics.addAll(value.getMultimediaFile().Hashtags);
+        if(!topics.contains(value.getMultimediaFile().Hashtags)) {
+            topics.addAll(value.getMultimediaFile().Hashtags);
+        }
 //        topics.stream()
 //                .anyMatch(s -> s.equals(value.getMultimediaFile().ChannelName)) ? topics.add(value.getMultimediaFile().ChannelName) : System.out.println("hi");
         //topics.stream().forEach( t -> brokerTopics.get(address).add(t) );
@@ -123,6 +126,7 @@ public class Broker implements INode{
         if(!topics.contains(value.getMultimediaFile().ChannelName)) {
             topics.add(value.getMultimediaFile().ChannelName);
         }
+        System.out.println("2   PRINTING TOPICS FOR:"+port);
         topics.stream().forEach( e -> System.out.println(e));
 
     }
@@ -180,6 +184,7 @@ public class Broker implements INode{
 
             pub_in = new ObjectInputStream(pubSocket.getInputStream());
             pub_out = new ObjectOutputStream(pubSocket.getOutputStream());
+            System.out.println("PubSocket open ");
 
             pub_out.writeObject(topics);
             pub_out.flush();
@@ -189,7 +194,9 @@ public class Broker implements INode{
 
             while(true){
                 chunk = (MultimediaFile)pub_in.readObject();
+                System.out.println("GOT CHUNK");
                 cons_out.writeObject(chunk);
+                System.out.println("SENT CHUNK");
                 if(chunk.IsLast){
                     System.out.println("Received all chunks");
                     break;
@@ -331,26 +338,25 @@ public class Broker implements INode{
             try{
 
                 System.out.println("Consumer Thread running ...\n");
-                // consumer Initialization
-                System.out.println(value.getAddress());
-                if(!initClients.contains(value.getAddress())){
+                if(!value.initialized){
 
                     init();
-                    initClients.add(value.getAddress());
+                    INode.initClients.add(value.getAddress());
                     //service_out.writeObject("USER REGISTERED");
 
                 }/// Consumer Initialized
                 else{
                     updateConsumers(value);
 
-//                    requestedTopics = value.getTopics();
-//                    for(Address pubAddress : registeredPublishers.keySet()){
-//                        var pubTopics = registeredPublishers.get(pubAddress);
-//                        if(pubTopics.stream()
-//                                .anyMatch(requestedTopics::contains)){
-//                            pull(socket,pubAddress,requestedTopics);
-//                        }
-//                    }
+                    requestedTopics = value.getTopics();
+                    for(Address pubAddress : registeredPublishers.keySet()){
+                        var pubTopics = registeredPublishers.get(pubAddress);
+                        if(pubTopics.stream()
+                                .anyMatch(requestedTopics::contains)){
+                            System.out.println("PULLING");
+                            pull(socket,pubAddress,requestedTopics);
+                        }
+                    }
                 }
                 System.out.println("Consumer thread ended....");
             }catch(Exception e){

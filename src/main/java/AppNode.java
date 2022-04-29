@@ -66,12 +66,14 @@ public class AppNode {
                     ArrayList<String> hashTags = new ArrayList();
                     BufferedReader br  = new BufferedReader(new InputStreamReader(System.in));
                     String hashtag;
+
                     //!hashtag.readLine().equalsIgnoreCase("end")
                     while(!(hashtag = br.readLine()).equals("end")){
 
                         hashTags.add(hashtag);
                         System.out.println(hashtag + " added to hashtags\n");
                     }
+                    pub.setFileCollection(text,hashTags);
                     pub.sendText(text,hashTags);
 
                 } catch (Exception e) {
@@ -102,7 +104,7 @@ public class AppNode {
                 pub.getBrokerList();
 
             }
-            System.out.println(" Select user type , 0 to exit , 1 for pub , 2 for consumer ");
+            System.out.println(" select user type , 0 to exit , 1 for pub , 2 for consumer  , 3 for Updating Broker Info");
             type = new Scanner(System.in).nextInt();
         }
         System.out.println("APP NODE EXITING");

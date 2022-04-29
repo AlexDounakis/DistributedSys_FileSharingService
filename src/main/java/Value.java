@@ -11,6 +11,7 @@ public class Value implements Serializable {
     private String action = "something";
     private String topic;
     SenderType sender = null;
+    public Boolean initialized = true;
 
 
     public Value (MultimediaFile m,SenderType senderType) {
@@ -18,9 +19,10 @@ public class Value implements Serializable {
         this.sender = senderType;
     }
 
-    public Value (Address address,SenderType senderType) {
+    public Value (Address address,SenderType senderType , Boolean initialized) {
         this.address = address;
         this.sender = senderType;
+        this.initialized = initialized;
     }
 
     public Value (MultimediaFile m, Address address,SenderType senderType) {
