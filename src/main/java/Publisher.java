@@ -7,6 +7,7 @@ import org.apache.commons.io.IOUtils;
 import org.bouncycastle.math.ec.ScaleYPointMap;
 import org.xml.sax.SAXException;
 
+import javax.swing.plaf.multi.MultiInternalFrameUI;
 import java.io.*;
 import java.io.File;
 import java.net.ServerSocket;
@@ -25,6 +26,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class Publisher extends Thread implements IPublisher, Runnable {
 
     private Socket socket;
+    private Socket socketToReceive;
     private ServerSocket serverSocket;
     public Address addr;
     public String channelName;
@@ -45,6 +47,7 @@ public class Publisher extends Thread implements IPublisher, Runnable {
 
     public Publisher(Address _addr , String _channelName){
         this.addr = _addr;
+        System.out.println(this.addr);
         this.channelName = _channelName;
         this.start();
     }
@@ -75,57 +78,79 @@ public class Publisher extends Thread implements IPublisher, Runnable {
     // Create Server Socket of Publisher
     @Override
     public void run(){
+
         try{
+            serverSocket = new ServerSocket(addr.getPort() +1);
+            //System.out.println(this.addr.getPort());
             System.out.println("Publisher ready to push ...\n");
-            serverSocket = new ServerSocket(addr.getPort());
+            System.out.println(serverSocket.getLocalPort());
             while(true){
 
 
-                socket = serverSocket.accept();
+                socketToReceive = serverSocket.accept();
                 System.out.println("socket.accept()\n");
-
                 Runnable task = () -> {
+
                     try {
-                        ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-                        ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+                        ObjectOutputStream out = new ObjectOutputStream(socketToReceive.getOutputStream());
+                        ObjectInputStream in = new ObjectInputStream(socketToReceive.getInputStream());
+
+                        System.out.println("OBJ INPUT _ OUTPUT STEAM OPENED..... ");
 
                         var requestedTopics = (ArrayList<String>) in.readObject();
+                        requestedTopics.forEach(t->System.out.println(t));
                         for (String topic : requestedTopics) {
-                            for (String filePath : FileCollection.keySet())
+                            for (String filePath : FileCollection.keySet()) {
                                 if (FileCollection.get(filePath).contains(topic)) {
+                                    System.out.println("PUSHING");
+                                    System.out.println(filePath);
                                     File file = new File(filePath);
-                                    push(file, FileCollection.get(filePath),out);
+                                    push(filePath,file, FileCollection.get(filePath), out);
                                 }
+                            }
                         }
-                    } catch (IOException | ClassNotFoundException e) {
-                        e.printStackTrace();
-                    } catch (TikaException e) {
-                        e.printStackTrace();
-                    } catch (SAXException e) {
+                    } catch (IOException | ClassNotFoundException | TikaException | SAXException e) {
                         e.printStackTrace();
                     }
                 };
                 new Thread(task).start();
             }
         }catch (IOException  e) { //| ClassNotFoundException
+//            try {
+//                socketToReceive.close();
+//            } catch (IOException ioException) {
+//                ioException.printStackTrace();
+//            }
             e.printStackTrace();
 
-        } finally {
-            try {
-                // close socket connection
-                serverSocket.close();
-            } catch (IOException ioException) {
-                ioException.printStackTrace();
-            }
         }
     }
+    //FileCollection <String , ArrayList<String> >   ------>  text to share , hash1
+    //                                               -------> videotoshare.mp4 , hash2
+    //                                               -------> phototoshare.jpg , hash3
 
-    public void push(File file, ArrayList<String> topics, ObjectOutputStream outputStream) throws TikaException, IOException, SAXException {
-
-        String path = file.getAbsolutePath();
-        var data = getMetadata(path);
-        System.out.println(data.get("lengthInKb"));
-        ArrayList<MultimediaFile> chunks = generateChunks(file);
+    public void push(String content ,File file, ArrayList<String> topics, ObjectOutputStream outputStream) throws TikaException, IOException, SAXException {
+        ArrayList<MultimediaFile> chunks = new ArrayList<>();
+        chunks.add(new MultimediaFile(content));
+//        if(content.endsWith(".mp4") || content.endsWith(".jpg")) {
+//            System.out.println("GenerateChunks for video or photo");
+//            chunks = generateChunks(file);
+//        }
+//        else {
+//            System.out.println("GenerateChunks for text");
+//            try {
+//                String home = System.getProperty("user.home");
+//
+//                File myFile = new File(content + ".txt");
+//                //myFile.createNewFile();
+//                FileWriter myWriter = new FileWriter(content+".txt");
+//                myWriter.write(content);
+//                myWriter.close();
+//                chunks = generateChunks(myFile);
+//            }catch (IOException e){
+//                e.printStackTrace();
+//            }
+//        }
         /*for (Value chunk : chunks) {
             chunk.setHashtags(topics);
         }*/
@@ -133,9 +158,9 @@ public class Publisher extends Thread implements IPublisher, Runnable {
         for (MultimediaFile chunk : chunks) {
             if(chunk.IsFirst){
                 chunk.setHashtags(topics);
-                chunk.IsFirst = false;
             }
             outputStream.writeObject(new Value(chunk,SenderType.PUBLISHER));
+            System.out.println("SEND CHUNK");
         }
 
     }
@@ -196,6 +221,7 @@ public class Publisher extends Thread implements IPublisher, Runnable {
             var _name = _file.getAbsolutePath().substring(57);
             System.out.println(_name +"\n"+  Long.toString(lengthInKb));
             data.put("LengthInKb" , Long.toString(lengthInKb));
+            data.put("name" , _name);
             BodyContentHandler handler = new BodyContentHandler();
             Metadata metadata = new Metadata();
             ParseContext pcontext = new ParseContext();
@@ -267,12 +293,12 @@ public class Publisher extends Thread implements IPublisher, Runnable {
     @Override
     public ArrayList<MultimediaFile> generateChunks(File file) throws TikaException, IOException, SAXException {
         ArrayList<MultimediaFile> chunks = new ArrayList<>();
-        byte[] videoFileChunk = new byte[1024 * 1024];// 1MB chunk
+        byte[] videoFileChunk = new byte[1024 * 1024/2];// 512KB chunk
         var metaMap = getMetadata(file.getAbsolutePath());
 
         try (FileInputStream fileInputStream = new FileInputStream(new File(file.getAbsolutePath()))) {
             while (fileInputStream.read(videoFileChunk, 0, videoFileChunk.length) > 0) {
-                chunks.add(new MultimediaFile( videoFileChunk ,"FileNameTest" ,this.channelName, metaMap.get("Creation-Date")));
+                chunks.add(new MultimediaFile( videoFileChunk ,metaMap.get("name") ,this.channelName, metaMap.get("Creation-Date")));
             }
         } catch (Exception e) {
             e.printStackTrace();

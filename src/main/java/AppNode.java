@@ -34,9 +34,10 @@ public class AppNode {
         try{
             System.out.println("port num:");
             port = new Scanner(System.in).nextInt();
+            System.out.println("Your port num is:  "+ port);
             inetAddress = InetAddress.getLocalHost();
             Ip = inetAddress.getHostAddress();
-            System.out.println(Ip);
+            System.out.println("Your Ip is:   "+Ip);
             address = new Address(Ip,port);
 
         }catch(Exception e){
@@ -74,6 +75,8 @@ public class AppNode {
                         System.out.println(hashtag + " added to hashtags\n");
                     }
                     pub.setFileCollection(text,hashTags);
+                    System.out.println("FileCollection:\n");
+                    System.out.println(pub.getFileCollection());
                     pub.sendText(text,hashTags);
 
                 } catch (Exception e) {
@@ -84,17 +87,18 @@ public class AppNode {
             if(type == 2) {
                 try {
                     System.out.println("Enter topics of interest: \n");
-                    String topic = new BufferedReader(new InputStreamReader(System.in)).readLine();
+                    BufferedReader br  = new BufferedReader(new InputStreamReader(System.in));
+                    String topic;
                     ArrayList<String> topics_one_by_one = new ArrayList();
 
                     System.out.println("Type end to Stop");
 
-                    while (!(topic.equals("end"))) {
+                    while (!(topic = br.readLine()).equals("end")) {
                         topics_one_by_one.add(topic);
-                        topic = new BufferedReader(new InputStreamReader(System.in)).readLine();
                         System.out.println(topic + " added to topics of interest\n");
                     }
                     con.sendTopics(topics_one_by_one);
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

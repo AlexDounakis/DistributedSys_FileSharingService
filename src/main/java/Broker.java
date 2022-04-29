@@ -66,6 +66,7 @@ public class Broker implements INode{
 
                 socket = serverSocket.accept();
                 System.out.println("socket.accept()\n");
+                System.out.println(socket.getPort());
 
                 Runnable task = () -> {
                     try {
@@ -112,9 +113,6 @@ public class Broker implements INode{
     }
     @Override
     public void updateNodes(Value value) {
-
-        System.out.println("1 PRINTING TOPICS FOR:"+port);
-        topics.stream().forEach( e -> System.out.println(e));
         //topics.stream().forEach(t -> t.equalsIgnoreCase(value.getMultimediaFile().Hashtags.stream().forEach();));
         if(!topics.contains(value.getMultimediaFile().Hashtags)) {
             topics.addAll(value.getMultimediaFile().Hashtags);
@@ -126,7 +124,6 @@ public class Broker implements INode{
         if(!topics.contains(value.getMultimediaFile().ChannelName)) {
             topics.add(value.getMultimediaFile().ChannelName);
         }
-        System.out.println("2   PRINTING TOPICS FOR:"+port);
         topics.stream().forEach( e -> System.out.println(e));
 
     }
@@ -180,7 +177,9 @@ public class Broker implements INode{
         MultimediaFile chunk;
 
         try{
-            Socket pubSocket = new Socket(pubAddress.getIp(),pubAddress.getPort());
+
+            Socket pubSocket = new Socket(pubAddress.getIp(),pubAddress.getPort()+1);
+            System.out.println(pubSocket.getPort() + "EXPECTED: " + (pubAddress.getPort()+1));
 
             pub_in = new ObjectInputStream(pubSocket.getInputStream());
             pub_out = new ObjectOutputStream(pubSocket.getOutputStream());
@@ -190,17 +189,23 @@ public class Broker implements INode{
             pub_out.flush();
 
             cons_out = new ObjectOutputStream(consumerSocket.getOutputStream());
-            cons_in = new ObjectInputStream(consumerSocket.getInputStream());
-
+            //cons_in = new ObjectInputStream(consumerSocket.getInputStream());
+            System.out.println("Consumer Socket open ");
             while(true){
-                chunk = (MultimediaFile)pub_in.readObject();
+
+                Value value = (Value)pub_in.readObject();
                 System.out.println("GOT CHUNK");
-                cons_out.writeObject(chunk);
+                chunk = value.getMultimediaFile();
+//                if(chunk.IsFirst){
+//                    ArrayList<String> _topics = chunk.Hashtags;
+//                }
+                cons_out.writeObject(new Value(chunk,SenderType.BROKER));
                 System.out.println("SENT CHUNK");
-                if(chunk.IsLast){
-                    System.out.println("Received all chunks");
-                    break;
-                }
+                break;
+//                if(chunk.IsLast){
+//                    System.out.println("Received all chunks");
+//                    break;
+//                }
             }
 
         }catch(IOException | ClassNotFoundException e){
@@ -349,8 +354,10 @@ public class Broker implements INode{
                     updateConsumers(value);
 
                     requestedTopics = value.getTopics();
+                    System.out.println(requestedTopics);
                     for(Address pubAddress : registeredPublishers.keySet()){
                         var pubTopics = registeredPublishers.get(pubAddress);
+                        System.out.println(pubTopics);
                         if(pubTopics.stream()
                                 .anyMatch(requestedTopics::contains)){
                             System.out.println("PULLING");

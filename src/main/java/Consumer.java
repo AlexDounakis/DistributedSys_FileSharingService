@@ -12,8 +12,6 @@ public class Consumer implements IConsumer {
     private Value value;
     ArrayList<String> topics = new ArrayList();
 
-    private HashMap<Address , ArrayList<String>> brokersList;
-
     protected ArrayList<Address> brokers = new ArrayList<>(Arrays.asList(
             /// first random broker IP and Port
             new Address("192.168.56.1", 6000)
@@ -53,8 +51,8 @@ public class Consumer implements IConsumer {
                 ObjectInputStream service_in = new ObjectInputStream(socket.getInputStream());
                 service_out.writeObject(new Value(this.addr,SenderType.CONSUMER,false));
 
-                brokersList = (HashMap) service_in.readObject();
-                brokersList.forEach((k,v)
+                AppNode.brokersList = (HashMap) service_in.readObject();
+                AppNode.brokersList.forEach((k,v)
                         -> System.out.println("Address: " + k + "   Topics:" +  v));
 
             }catch(Exception e){
@@ -77,59 +75,84 @@ public class Consumer implements IConsumer {
     }
 
     public void sendTopics(ArrayList<String> topics){
-        this.topics = topics;
+        this.topics.addAll(topics);
 
         // Thread .run() - thread functionality
         Runnable task = () -> {
             try {
                 System.out.println("thread Send Topics started ...");
                 ArrayList<String> temp = new ArrayList();
+
                 //AtomicReference<Address> brokerAddress = null;
 
-                topics.forEach(s ->
-                        AppNode.brokersList.forEach((k,t)
-                                -> {
-                            if(t.contains(s)){
-                                temp.add(s);
-                                try {
-                                    System.out.println(k.getPort());
-                                    Socket socketToBroker = new Socket(k.getIp(), k.getPort());
-                                    System.out.println("Connected to " + k.getIp() + ":" + k.getPort());
+                this.topics.forEach(s -> {
 
-                                    ObjectOutputStream service_out = new ObjectOutputStream(socketToBroker.getOutputStream());
-                                    //ObjectInputStream service_in = new ObjectInputStream(socket.getInputStream());
+                            System.out.println(s);
+                            System.out.println(AppNode.brokersList);
+                            AppNode.brokersList.forEach((k, t)
+                                    -> {
+                                System.out.println(k + " " + t + "");
+                                if (t.contains(s)) {
+                                    System.out.println("INSIDE Contains");
+                                    temp.add(s);
+                                    Socket socketToBroker;
+                                    try {
+                                        System.out.println(k.getPort());
+                                        socketToBroker = new Socket(k.getIp(), k.getPort());
+                                        System.out.println("Connected to " + k.getIp() + ":" + k.getPort());
 
-                                    service_out.writeObject(new Value(this.addr, temp , SenderType.CONSUMER));
-                                    service_out.flush();
-                                    temp.clear();
+                                        ObjectOutputStream service_out = new ObjectOutputStream(socketToBroker.getOutputStream());
+                                        ObjectInputStream service_in = new ObjectInputStream(socketToBroker.getInputStream());
 
-                                    System.out.println("Con .flush()");
-                                    socketToBroker.close();
-                                    System.out.println("Thread for send topics closed...");
+                                        service_out.writeObject(new Value(this.addr, temp, SenderType.CONSUMER));
+                                        service_out.flush();
+                                        temp.clear();
 
-                                }catch(Exception e){
-                                    e.printStackTrace();
+                                        System.out.println("waiting for files .... ");
+                                        receiveFile(service_in);
+
+                                    } catch (Exception e) {
+
+                                        e.printStackTrace();
+                                    }
+
+//                                finally {
+//                                    try {
+//                                        // close socket connection
+////                                        socketToBroker.close();
+//                                        System.out.println("send topics socket.close()");
+//                                    } catch (IOException ioException) {
+//                                        ioException.printStackTrace();
+//                                    }
+//                                }
                                 }
-                            }
-                        })
-                );
 
+                            });
+                        }
+                );
             } catch (Exception e) {
                 e.getStackTrace();
-            } finally {
-                try {
-                    // close socket connection
-                    socket.close();
-                    System.out.println("send topics socket.close()");
-                } catch (IOException ioException) {
-                    ioException.printStackTrace();
-                }
             }
+
         };
         Thread thread = new Thread(task);
         thread.start();
+    }
 
+    public void receiveFile(ObjectInputStream in){
+        String home = System.getProperty("user.home");
+        try {
+            Value value_in_chunk = (Value) in.readObject();
+            MultimediaFile chunk = value_in_chunk.getMultimediaFile();
+            //File file = new File(home + "/Downloads/" + chunk.FileName + ".txt");
+            System.out.println(chunk.text);
 
+//            while(true){
+//
+//            }
+        }catch (IOException | ClassNotFoundException e){
+            e.printStackTrace();
+        }
     }
 
 }
