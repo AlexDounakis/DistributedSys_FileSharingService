@@ -167,12 +167,12 @@ public class Broker implements INode{
 
     }
 
-    public void pull(Socket consumerSocket , Address pubAddress , ArrayList<String> topics){
+    public void pull(ObjectOutputStream consumer_out , Address pubAddress , ArrayList<String> topics){
         ObjectInputStream pub_in;
         ObjectOutputStream pub_out;
 
-        ObjectInputStream cons_in;
-        ObjectOutputStream cons_out;
+//        ObjectInputStream cons_in;
+//        ObjectOutputStream cons_out;
 
         MultimediaFile chunk;
 
@@ -188,9 +188,9 @@ public class Broker implements INode{
             pub_out.writeObject(topics);
             pub_out.flush();
 
-            cons_out = new ObjectOutputStream(consumerSocket.getOutputStream());
+            //cons_out = new ObjectOutputStream(consumerSocket.getOutputStream());
             //cons_in = new ObjectInputStream(consumerSocket.getInputStream());
-            System.out.println("Consumer Socket open ");
+            //System.out.println("Consumer Socket open ");
             while(true){
 
                 Value value = (Value)pub_in.readObject();
@@ -199,7 +199,8 @@ public class Broker implements INode{
 //                if(chunk.IsFirst){
 //                    ArrayList<String> _topics = chunk.Hashtags;
 //                }
-                cons_out.writeObject(new Value(chunk,SenderType.BROKER));
+                consumer_out.writeObject(new Value(chunk,SenderType.BROKER));
+                System.out.println(chunk.getAbsolutePath());
                 System.out.println("SENT CHUNK");
                 break;
 //                if(chunk.IsLast){
@@ -361,7 +362,7 @@ public class Broker implements INode{
                         if(pubTopics.stream()
                                 .anyMatch(requestedTopics::contains)){
                             System.out.println("PULLING");
-                            pull(socket,pubAddress,requestedTopics);
+                            pull(service_out,pubAddress,requestedTopics);
                         }
                     }
                 }

@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 //public class Publisher extends AppNode extends Thread implements IPublisher implements Runnable {
@@ -98,20 +99,30 @@ public class Publisher extends Thread implements IPublisher, Runnable {
                         System.out.println("OBJ INPUT _ OUTPUT STEAM OPENED..... ");
 
                         var requestedTopics = (ArrayList<String>) in.readObject();
+
                         requestedTopics.forEach(t->System.out.println(t));
+
                         for (String topic : requestedTopics) {
-                            for (String filePath : FileCollection.keySet()) {
-                                if (FileCollection.get(filePath).contains(topic)) {
+                            long sumOfFiles = FileCollection.entrySet().stream().filter(c -> c.getValue().contains(topic)).count();
+
+                            FileCollection.keySet().forEach(key -> {
+                                if (FileCollection.get(key).contains(topic)) {
                                     System.out.println("PUSHING");
-                                    System.out.println(filePath);
-                                    File file = new File(filePath);
-                                    push(filePath,file, FileCollection.get(filePath), out);
+                                    System.out.println(key);
+                                    File file = new File(key);
+
+                                    try {
+
+                                        push(key, file, FileCollection.get(key), out , sumOfFiles);
+                                    } catch (TikaException | IOException | SAXException e) {
+                                        e.printStackTrace();
+                                    }
                                 }
-                            }
+                            });
                         }
-                    } catch (IOException | ClassNotFoundException | TikaException | SAXException e) {
-                        e.printStackTrace();
-                    }
+                        }catch (IOException | ClassNotFoundException e) {
+                            e.printStackTrace();
+                        }
                 };
                 new Thread(task).start();
             }
@@ -129,12 +140,14 @@ public class Publisher extends Thread implements IPublisher, Runnable {
     //                                               -------> videotoshare.mp4 , hash2
     //                                               -------> phototoshare.jpg , hash3
 
-    public void push(String content ,File file, ArrayList<String> topics, ObjectOutputStream outputStream) throws TikaException, IOException, SAXException {
+    public void push(String content ,File file, ArrayList<String> topics, ObjectOutputStream outputStream , long sumOfFiles) throws TikaException, IOException, SAXException {
         ArrayList<MultimediaFile> chunks = new ArrayList<>();
         chunks.add(new MultimediaFile(content));
+
+
 //        if(content.endsWith(".mp4") || content.endsWith(".jpg")) {
 //            System.out.println("GenerateChunks for video or photo");
-//            chunks = generateChunks(file);
+//            chunks = generateChunks(file , sumOfFiles);
 //        }
 //        else {
 //            System.out.println("GenerateChunks for text");
@@ -147,6 +160,7 @@ public class Publisher extends Thread implements IPublisher, Runnable {
 //                myWriter.write(content);
 //                myWriter.close();
 //                chunks = generateChunks(myFile);
+        //        chunks.get(0).Count = sumOfFiles;
 //            }catch (IOException e){
 //                e.printStackTrace();
 //            }
@@ -156,10 +170,12 @@ public class Publisher extends Thread implements IPublisher, Runnable {
         }*/
 //        outputStream.writeObject(new Value(new MultimediaFile(,)));
         for (MultimediaFile chunk : chunks) {
-            if(chunk.IsFirst){
-                chunk.setHashtags(topics);
-            }
-            outputStream.writeObject(new Value(chunk,SenderType.PUBLISHER));
+//            if(chunk.IsFirst){
+//                chunk.setHashtags(topics);
+//            }
+            chunk.setHashtags(topics);
+            chunk.Count = sumOfFiles;
+            outputStream.writeObject(new Value(chunk,SenderType.PUBLISHER ));
             System.out.println("SEND CHUNK");
         }
 
@@ -291,7 +307,7 @@ public class Publisher extends Thread implements IPublisher, Runnable {
     @Override
     public void disconnect(){}
     @Override
-    public ArrayList<MultimediaFile> generateChunks(File file) throws TikaException, IOException, SAXException {
+    public ArrayList<MultimediaFile> generateChunks(File file ) throws TikaException, IOException, SAXException {
         ArrayList<MultimediaFile> chunks = new ArrayList<>();
         byte[] videoFileChunk = new byte[1024 * 1024/2];// 512KB chunk
         var metaMap = getMetadata(file.getAbsolutePath());
@@ -306,6 +322,7 @@ public class Publisher extends Thread implements IPublisher, Runnable {
         //MARK LAST CHUNK AS LAST TO HELP BROKER WITH ORDERING
         chunks.get(chunks.size() - 1).setIsLast(true);
         chunks.get(0).IsFirst = true;
+        //chunks.get(0).Count = sumOfFiles;
 
         return chunks;
     }

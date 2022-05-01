@@ -18,6 +18,7 @@ public class MultimediaFile implements Serializable {
     byte[] FileChunk;
     public boolean IsFirst = false;
     public boolean IsLast = false;
+    public long Count = 0;
 
     String text;
 

@@ -111,6 +111,7 @@ public class AppNode {
             System.out.println(" select user type , 0 to exit , 1 for pub , 2 for consumer  , 3 for Updating Broker Info");
             type = new Scanner(System.in).nextInt();
         }
+
         System.out.println("APP NODE EXITING");
 
 

@@ -93,7 +93,6 @@ public class Consumer implements IConsumer {
                                     -> {
                                 System.out.println(k + " " + t + "");
                                 if (t.contains(s)) {
-                                    System.out.println("INSIDE Contains");
                                     temp.add(s);
                                     Socket socketToBroker;
                                     try {
@@ -109,6 +108,7 @@ public class Consumer implements IConsumer {
                                         temp.clear();
 
                                         System.out.println("waiting for files .... ");
+//                                        if(service_in.readObject())
                                         receiveFile(service_in);
 
                                     } catch (Exception e) {
@@ -142,14 +142,30 @@ public class Consumer implements IConsumer {
     public void receiveFile(ObjectInputStream in){
         String home = System.getProperty("user.home");
         try {
-            Value value_in_chunk = (Value) in.readObject();
-            MultimediaFile chunk = value_in_chunk.getMultimediaFile();
-            //File file = new File(home + "/Downloads/" + chunk.FileName + ".txt");
-            System.out.println(chunk.text);
 
-//            while(true){
-//
-//            }
+            Value chunkInValue = (Value) in.readObject();
+            //System.out.println(value_in_chunk.get);
+            MultimediaFile chunk = chunkInValue.getMultimediaFile();
+            //File file = new File(home + "/Downloads/" + chunk.FileName + ".txt");
+            System.out.println(chunk.Hashtags);
+            System.out.println(chunk.getAbsolutePath());
+
+            long sumOfFiles = chunk.Count;
+            while(sumOfFiles >0){
+                if(chunk.IsFirst){
+                    //saveHashtags(chunk);
+
+                }else if(chunk.IsLast){
+                    System.out.println("GOT File: ");
+                }
+                //saveFile(chunk);
+                chunkInValue = (Value)in.readObject();
+                chunk = chunkInValue.getMultimediaFile();
+//                System.out.println(chunk.Hashtags);
+                System.out.println(chunk.getAbsolutePath());
+
+            }
+            System.out.println("GOT ALL FILES....");
         }catch (IOException | ClassNotFoundException e){
             e.printStackTrace();
         }

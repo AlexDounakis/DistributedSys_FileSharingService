@@ -14,6 +14,7 @@ public class Value implements Serializable {
     public Boolean initialized = true;
 
 
+
     public Value (MultimediaFile m,SenderType senderType) {
         this.multimediaFile = m;
         this.sender = senderType;
