@@ -1,3 +1,4 @@
+import com.uwyn.jhighlight.fastutil.Hash;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.ParseContext;
@@ -24,7 +25,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 //public class Publisher extends AppNode extends Thread implements IPublisher implements Runnable {
-public class Publisher extends Thread implements IPublisher, Runnable {
+public class Publisher extends Thread implements Runnable {
 
     private Socket socket;
     private Socket socketToReceive;
@@ -202,6 +203,7 @@ public class Publisher extends Thread implements IPublisher, Runnable {
                         Socket socketBroker = new Socket(address.getIp(), address.getPort());
                         ObjectOutputStream serv_out = new ObjectOutputStream(socketBroker.getOutputStream());
 
+                        generateChunks(new File(text));
                         MultimediaFile file = new MultimediaFile(this.channelName,text);
                         file.setHashtag(s);
                         System.out.println(file.getHashtags());
@@ -212,7 +214,7 @@ public class Publisher extends Thread implements IPublisher, Runnable {
                         System.out.println("Thread sending text ended ....");
 
 
-                    } catch (NoSuchAlgorithmException | IOException e) {
+                    } catch (NoSuchAlgorithmException | IOException | TikaException | SAXException e) {
                         e.printStackTrace();
                     }
                 });
@@ -272,63 +274,34 @@ public class Publisher extends Thread implements IPublisher, Runnable {
     }
 
     // Override Functions Implementation
-    @Override
-    public void init(int x){
-//        Runnable task = () ->{
-//            try {
-//                System.out.println("\n Thread for init running...\n");
-//                socket = new Socket(brokers.get(0).getIp(), brokers.get(0).getPort());
-//
-//                ObjectOutputStream service_out = new ObjectOutputStream(socket.getOutputStream());
-//                ObjectInputStream service_in = new ObjectInputStream(socket.getInputStream());
-//
-//                service_out.writeObject(new Value(this.addr,SenderType.PUBLISHER,));
-//                service_out.flush();
-//
-//                AppNode.brokersList = (HashMap) service_in.readObject();
-//                AppNode.brokersList.forEach((k,v)
-//                        -> System.out.println("Address: " + k + "   Topics:" +  v)
-//                );
-//            }catch(Exception e){
-//                e.printStackTrace();
-//            }try{
-//                socket.close();
-//                System.out.println("Thread for init closed...");
-//            }catch (IOException e){
-//                e.printStackTrace();
-//            }
-//
-//        };
-//        Thread initThread = new Thread(task);
-//        initThread.start();
-    }
-    @Override
-    public void connect(){}
-    @Override
-    public void disconnect(){}
-    @Override
-    public ArrayList<MultimediaFile> generateChunks(File file ) throws TikaException, IOException, SAXException {
-        ArrayList<MultimediaFile> chunks = new ArrayList<>();
+//    @Override
+//    public void init(int x){
+//    }
+//    @Override
+//    public void connect(){}
+//    @Override
+//    public void disconnect(){}
+//    @Override
+    public ArrayList<byte[]> generateChunks(File file ) throws TikaException, IOException, SAXException {
+        ArrayList<byte[]> chunks = new ArrayList<>();
         byte[] videoFileChunk = new byte[1024 * 1024/2];// 512KB chunk
-        var metaMap = getMetadata(file.getAbsolutePath());
+//        var metaMap = getMetadata(file.getAbsolutePath());
 
         try (FileInputStream fileInputStream = new FileInputStream(new File(file.getAbsolutePath()))) {
             while (fileInputStream.read(videoFileChunk, 0, videoFileChunk.length) > 0) {
-                chunks.add(new MultimediaFile( videoFileChunk ,metaMap.get("name") ,this.channelName, metaMap.get("Creation-Date")));
+                chunks.add(videoFileChunk);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
         //MARK LAST CHUNK AS LAST TO HELP BROKER WITH ORDERING
-        chunks.get(chunks.size() - 1).setIsLast(true);
-        chunks.get(0).IsFirst = true;
+//        chunks.get(chunks.size() - 1).setIsLast(true);
+//        chunks.get(0).IsFirst = true;
         //chunks.get(0).Count = sumOfFiles;
 
         return chunks;
     }
-    @Override
-    public void updateNodes(Value value){}
-    @Override
+
     public void getBrokerList() {
         Runnable task = () -> {
             try{
@@ -354,7 +327,6 @@ public class Publisher extends Thread implements IPublisher, Runnable {
         new Thread(task).start();
     }
 
-    @Override
     public Address hashTopic(String topic) throws NoSuchAlgorithmException {
         MessageDigest digest = MessageDigest.getInstance("MD5");
         digest.update(topic.getBytes(), 0, topic.length());
@@ -386,10 +358,81 @@ public class Publisher extends Thread implements IPublisher, Runnable {
 
         return null;
     }
-    @Override
-    public void notifyBrokersNewMessage(String s) {}
-    @Override
-    public void notifyFailure(Broker broker) {}
-    @Override
-    public void push(String s, Value v) {}
+
+    public void sendFile(String text,ArrayList<String> hashtags) {
+        Runnable task = () -> {
+            try {
+                hashtags.forEach(hashtag
+                        -> {
+                    try {
+                        System.out.println("Thread sending file started...");
+                        notifyBroker(text,hashtag);
+                        System.out.println("Thread sending text ended ....");
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+
+            } catch (Exception e) {
+                e.getStackTrace();
+            }
+        };
+        Thread thread = new Thread(task);
+        thread.start();
+
+    }
+    public void notifyBroker(String text,String hashtag){
+        try{
+            Address address = hashTopic(hashtag);
+            System.out.println("Notifying Broker: " + address  + " for:  "+ hashtag);
+
+            Socket socketBroker = new Socket(address.getIp(), address.getPort());
+            ObjectOutputStream serv_out = new ObjectOutputStream(socketBroker.getOutputStream());
+
+            serv_out.writeObject(new Value(this.addr,hashtag,SenderType.PUBLISHER));
+            serv_out.flush();
+
+            /// send video to broker ///
+            ArrayList<byte[]> chunks = new ArrayList<>();
+            var metaMap = new HashMap<String,String>();
+
+            if(text.endsWith(".mp4") || text.endsWith(".jpg")) {
+                System.out.println("GenerateChunks for video or photo");
+                //chunks = generateChunks(file , sumOfFiles);
+            }
+            else {
+                System.out.println("GenerateChunks for text");
+                try {
+                    String home = System.getProperty("user.home");
+
+                    ///// THIS MUST CHANGE ///////
+                    File myFile = new File(text + ".txt");
+                    //myFile.createNewFile();
+                    FileWriter myWriter = new FileWriter(text + ".txt");
+                    myWriter.write(text);
+                    myWriter.close();
+                    metaMap = getMetadata(myFile.getAbsolutePath());
+                    chunks = generateChunks(myFile);
+
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            /// we have to set IsFirst / IsLast in Value obj
+
+            for(byte[] chunk : chunks){
+                //push()
+                serv_out.writeObject(new Value(new MultimediaFile(chunk , this.channelName,metaMap.get("Date-Created")), this.addr , hashtag,SenderType.PUBLISHER));
+            }
+        } catch (NoSuchAlgorithmException | IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+//    @Override
+//    public void notifyFailure(Broker broker) {}
+//    @Override
+//    public void push(String s, Value v) {}
 }

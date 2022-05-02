@@ -3,6 +3,7 @@ import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.List;
 
 public class MultimediaFile implements Serializable {
 
@@ -15,7 +16,7 @@ public class MultimediaFile implements Serializable {
     String FrameWidth;
     String FrameHeight;
     ArrayList<String> Hashtags = new ArrayList<>();
-    byte[] FileChunk;
+    List<byte[]> File;
     public boolean IsFirst = false;
     public boolean IsLast = false;
     public long Count = 0;
@@ -24,33 +25,33 @@ public class MultimediaFile implements Serializable {
 
 
     //Video Constructor
-    public MultimediaFile(String videoName, String channelName, String dateCreated, String length, String Framerate,
-                          String frameWidth, String frameHeight , ArrayList<String> hashtags, byte[] FileChunk , String absolutePath) {
-        this.FileName = videoName;
-        this.ChannelName = channelName;
-        this.DateCreated = dateCreated;
-        this.Length = length;
-        this.Framerate = Framerate;
-        this.FrameWidth = frameWidth;
-        this.FrameHeight = frameHeight;
-        this.Hashtags = hashtags;
-        this.FileChunk = FileChunk;
-        this.AbsolutePath = absolutePath;
-    }
+//    public MultimediaFile(String videoName, String channelName, String dateCreated, String length, String Framerate,
+//                          String frameWidth, String frameHeight , ArrayList<String> hashtags, byte[] FileChunk , String absolutePath) {
+//        this.FileName = videoName;
+//        this.ChannelName = channelName;
+//        this.DateCreated = dateCreated;
+//        this.Length = length;
+//        this.Framerate = Framerate;
+//        this.FrameWidth = frameWidth;
+//        this.FrameHeight = frameHeight;
+//        this.Hashtags = hashtags;
+//        this.FileChunk = FileChunk;
+//        this.AbsolutePath = absolutePath;
+//    }
 
     public MultimediaFile(String absolutePath){
         this.AbsolutePath = absolutePath;
     }
 
-    public MultimediaFile(byte[] FileChunk , String fileName , String dateCreated){
-        this.FileChunk = FileChunk;
-        this.FileName =fileName;
-        this.DateCreated = dateCreated;
-    }
+//    public MultimediaFile(byte[] FileChunk , String fileName , String dateCreated){
+////        this.File = FileChunk;
+//        this.FileName =fileName;
+//        this.DateCreated = dateCreated;
+//    }
 
     //Photo constructor
     public MultimediaFile(byte[] FileChunk, String fileName, String channelName, String dateCreated, String frameWidth, String frameHeight ){
-        this.FileChunk = FileChunk;
+//        this.File = FileChunk;
         this.FileName =fileName;
         this.ChannelName = channelName;
         this.DateCreated = dateCreated;
@@ -59,9 +60,9 @@ public class MultimediaFile implements Serializable {
     }
 
     //Text constructor
-    public MultimediaFile(byte[] FileChunk, String fileName, String channelName, String dateCreated){
-        this.FileChunk = FileChunk;
-        this.FileName =fileName;
+    public MultimediaFile(byte[] FileChunk, String channelName, String dateCreated){
+        this.File.add(FileChunk);
+//        this.FileName =fileName;
         this.ChannelName = channelName;
         this.DateCreated = dateCreated;
     }
@@ -93,7 +94,7 @@ public class MultimediaFile implements Serializable {
     }
     public boolean IsLast(){return this.IsLast;}
 //    public void setIsFirst(boolean isFirst)
-    public byte[] getVideoFileChunk() {
-        return FileChunk;
+    public List<byte[]> getVideoFileChunk() {
+        return File;
     }
 }

@@ -55,11 +55,8 @@ public class AppNode {
         while( type != 0){
             // Publisher logic
             if(type == 1) {
-                //System.out.println("Type message to send:");
                 try {
-
-                    // upload
-                    //pub.init(5);
+                    //switch case with user input to determine multimedia file , text photo or video
                     System.out.println("Enter text to share: \n");
                     String text = new BufferedReader(new InputStreamReader(System.in)).readLine();
 
@@ -68,16 +65,19 @@ public class AppNode {
                     BufferedReader br  = new BufferedReader(new InputStreamReader(System.in));
                     String hashtag;
 
-                    //!hashtag.readLine().equalsIgnoreCase("end")
                     while(!(hashtag = br.readLine()).equals("end")){
 
                         hashTags.add(hashtag);
                         System.out.println(hashtag + " added to hashtags\n");
                     }
+                    /// video case --> text should be the path location selected after the switch case
                     pub.setFileCollection(text,hashTags);
                     System.out.println("FileCollection:\n");
                     System.out.println(pub.getFileCollection());
-                    pub.sendText(text,hashTags);
+                    //pub.sendText(text,hashTags);
+                    pub.sendFile(text,hashTags);
+//                    pub.sendFile();
+                    //pub.push(text);
 
                 } catch (Exception e) {
                     e.printStackTrace();

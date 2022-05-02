@@ -27,6 +27,7 @@ public class Broker implements INode{
 
     // this list includes both channel names and specific topics
     public static ArrayList<String> topics = new ArrayList<>();
+    private HashMap<String , ArrayList<MultimediaFile>> Queue;
 
     // Constructor
     public Broker(String Ip , int port){
@@ -113,19 +114,11 @@ public class Broker implements INode{
     }
     @Override
     public void updateNodes(Value value) {
-
-        //topics.stream().forEach(t -> t.equalsIgnoreCase(value.getMultimediaFile().Hashtags.stream().forEach();));
         value.getMultimediaFile().Hashtags.forEach(hashtag ->{
             if(!topics.contains(hashtag))
                 topics.add(hashtag);
         });
-//        topics.stream()
-//                .anyMatch(s -> s.equals(value.getMultimediaFile().ChannelName)) ? topics.add(value.getMultimediaFile().ChannelName) : System.out.println("hi");
-        //topics.stream().forEach( t -> brokerTopics.get(address).add(t) );
 
-//        if(!topics.contains(value.getMultimediaFile().ChannelName)) {
-//            topics.add(value.getMultimediaFile().ChannelName);
-//        }
         topics.stream().forEach( e -> System.out.println(e));
 
     }
@@ -240,8 +233,13 @@ public class Broker implements INode{
                     init();
                     System.out.println("Get Brokers........");
                 }else{
-                    System.out.println(value.getAction());
+                    /// we have open socket from publisher and we must get each chunk from inputstream() incoming from publisher.push()
+                    /// same logic as pull() function were we receive each chunk
+                    /// while receiving chunks we use an Arraylist<byte[]> to keep them and after last chunk we create new MultimediaFile(ArrayList<byte[]>,hashtag)
+                    /// after last chunk we use the hashmap queue .get(value.hashtag) to save the multimedia file
+                    /// insertFileToQueue(value);
                     updateRegisteredPublishers(value);
+                    ///updateRegisteredPublishers(value)   --> check where hashtags are
                     updateNodes(value);
                     updateBrokerInfo();
                 }
@@ -273,7 +271,7 @@ public class Broker implements INode{
             // We already have the publisher registered to Broker
             if(registeredPublishers.containsKey(value.getAddress())){
                 registeredPublishers.get(value.getAddress())
-                        .addAll(value.getMultimediaFile().Hashtags);
+                        .addAll(value.getMultimediaFile().Hashtags); // OR value.hashtag
                 System.out.println("Pub updated ....");
             }else {
                 // Publisher not registered to Broker
