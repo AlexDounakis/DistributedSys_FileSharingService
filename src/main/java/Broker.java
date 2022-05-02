@@ -113,17 +113,19 @@ public class Broker implements INode{
     }
     @Override
     public void updateNodes(Value value) {
+
         //topics.stream().forEach(t -> t.equalsIgnoreCase(value.getMultimediaFile().Hashtags.stream().forEach();));
-        if(!topics.contains(value.getMultimediaFile().Hashtags)) {
-            topics.addAll(value.getMultimediaFile().Hashtags);
-        }
+        value.getMultimediaFile().Hashtags.forEach(hashtag ->{
+            if(!topics.contains(hashtag))
+                topics.add(hashtag);
+        });
 //        topics.stream()
 //                .anyMatch(s -> s.equals(value.getMultimediaFile().ChannelName)) ? topics.add(value.getMultimediaFile().ChannelName) : System.out.println("hi");
         //topics.stream().forEach( t -> brokerTopics.get(address).add(t) );
 
-        if(!topics.contains(value.getMultimediaFile().ChannelName)) {
-            topics.add(value.getMultimediaFile().ChannelName);
-        }
+//        if(!topics.contains(value.getMultimediaFile().ChannelName)) {
+//            topics.add(value.getMultimediaFile().ChannelName);
+//        }
         topics.stream().forEach( e -> System.out.println(e));
 
     }
