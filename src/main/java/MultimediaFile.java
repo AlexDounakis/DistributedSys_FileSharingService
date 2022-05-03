@@ -10,7 +10,7 @@ public class MultimediaFile implements Serializable {
     String ChannelName;
     Date DateCreated;
     ArrayList<String> Hashtags = new ArrayList<>();
-    List<byte[]> File;
+    List<byte[]> File = new ArrayList<>();
 
     public long Count = 0;
 

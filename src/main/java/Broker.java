@@ -27,7 +27,7 @@ public class Broker implements INode{
 
     // this list includes both channel names and specific topics
     public static ArrayList<String> topics = new ArrayList<>();
-    private HashMap<String , ArrayList<MultimediaFile>> Queue;
+    private HashMap<String , ArrayList<MultimediaFile>> Queue = new HashMap<>();
 
     // Constructor
     public Broker(String Ip , int port){
