@@ -140,7 +140,7 @@ public class Consumer implements IConsumer {
     }
 
     public void receiveFile(ObjectInputStream in){
-        String home = System.getProperty("user.home");
+        /*String home = System.getProperty("user.home");
         try {
 
             Value chunkInValue = (Value) in.readObject();
@@ -168,7 +168,7 @@ public class Consumer implements IConsumer {
             System.out.println("GOT ALL FILES....");
         }catch (IOException | ClassNotFoundException e){
             e.printStackTrace();
-        }
+        }*/
     }
 
 }
