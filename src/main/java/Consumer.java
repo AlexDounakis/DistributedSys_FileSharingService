@@ -151,20 +151,20 @@ public class Consumer implements IConsumer {
             System.out.println(chunk.getAbsolutePath());
 
             long sumOfFiles = chunk.Count;
-            while(sumOfFiles >0){
-                if(chunk.IsFirst){
-                    //saveHashtags(chunk);
-
-                }else if(chunk.IsLast){
-                    System.out.println("GOT File: ");
-                }
-                //saveFile(chunk);
-                chunkInValue = (Value)in.readObject();
-                chunk = chunkInValue.getMultimediaFile();
-//                System.out.println(chunk.Hashtags);
-                System.out.println(chunk.getAbsolutePath());
-
-            }
+//            while(sumOfFiles >0){
+//                if(chunk.IsFirst){
+//                    //saveHashtags(chunk);
+//
+//                }else if(chunk.IsLast){
+//                    System.out.println("GOT File: ");
+//                }
+//                //saveFile(chunk);
+//                chunkInValue = (Value)in.readObject();
+//                chunk = chunkInValue.getMultimediaFile();
+////                System.out.println(chunk.Hashtags);
+//                System.out.println(chunk.getAbsolutePath());
+//
+//            }
             System.out.println("GOT ALL FILES....");
         }catch (IOException | ClassNotFoundException e){
             e.printStackTrace();

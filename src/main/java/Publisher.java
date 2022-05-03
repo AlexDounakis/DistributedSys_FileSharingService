@@ -6,7 +6,6 @@ import org.apache.tika.sax.BodyContentHandler;
 import org.xml.sax.SAXException;
 import java.io.*;
 import java.io.File;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
 
@@ -43,7 +42,7 @@ public class Publisher {
         return this.FileCollection;
     }
 
-    public static void main (String args[]) throws TikaException, IOException, SAXException {
+    public static void main (String args[]){
 //
 //        Publisher pub = new Publisher();
 //        String path = "C:\\Users\\alex\\source\\repos\\distributed_sys_streamer\\data\\sample3.mp4";
@@ -211,8 +210,9 @@ public class Publisher {
             Socket socketBroker = new Socket(address.getIp(), address.getPort());
             ObjectOutputStream serv_out = new ObjectOutputStream(socketBroker.getOutputStream());
 
-
-            serv_out.writeObject(new Value(this.addr,hashtag,SenderType.PUBLISHER));
+            ArrayList<String> listOfHashtag = new ArrayList<>();
+            listOfHashtag.add(hashtag);
+            serv_out.writeObject(new Value(this.addr,hashtag , "something",SenderType.PUBLISHER));
             serv_out.flush();
 
             /// send video to broker ///
@@ -253,11 +253,15 @@ public class Publisher {
 
     }
     public void push(int i , ArrayList<byte[]> chunks, Date dateCreated, ObjectOutputStream serv_out) throws IOException {
+
         if(i==chunks.size()-1){
-            serv_out.writeObject(new Value(new MultimediaFile(chunks.get(i), dateCreated), this.addr ,SenderType.PUBLISHER).isLast = true);
+            Value valueToSend = new Value(new MultimediaFile(chunks.get(i), dateCreated), this.addr ,SenderType.PUBLISHER);
+            valueToSend.isLast = true;
+            serv_out.writeObject(valueToSend);
             serv_out.flush();
         }
-        serv_out.writeObject(new Value(new MultimediaFile(chunks.get(i), dateCreated), this.addr ,SenderType.PUBLISHER).isLast = false);
+
+        serv_out.writeObject(new Value(new MultimediaFile(chunks.get(i), dateCreated), this.addr ,SenderType.PUBLISHER));
         serv_out.flush();
     }
 }

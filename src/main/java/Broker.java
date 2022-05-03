@@ -27,7 +27,7 @@ public class Broker implements INode{
 
     // this list includes both channel names and specific topics
     public static ArrayList<String> topics = new ArrayList<>();
-    private HashMap<String , ArrayList<MultimediaFile>> Queue;
+    private HashMap<String , ArrayList<MultimediaFile>> Queue = new HashMap<>();
 
     // Constructor
     public Broker(String Ip , int port){
@@ -115,16 +115,16 @@ public class Broker implements INode{
     @Override
     public void updateNodes(Value value) {
         //topics.stream().forEach(t -> t.equalsIgnoreCase(value.getMultimediaFile().Hashtags.stream().forEach();));
-        if(!topics.contains(value.getMultimediaFile().Hashtags)) {
-            topics.addAll(value.getMultimediaFile().Hashtags);
+        if(!topics.contains(value.getTopic())) {
+            topics.add(value.getTopic());
         }
 //        topics.stream()
 //                .anyMatch(s -> s.equals(value.getMultimediaFile().ChannelName)) ? topics.add(value.getMultimediaFile().ChannelName) : System.out.println("hi");
         //topics.stream().forEach( t -> brokerTopics.get(address).add(t) );
 
-        if(!topics.contains(value.getMultimediaFile().ChannelName)) {
-            topics.add(value.getMultimediaFile().ChannelName);
-        }
+//        if(!topics.contains(value.getMultimediaFile().ChannelName)) {
+//            topics.add(value.getMultimediaFile().ChannelName);
+//        }
         topics.stream().forEach( e -> System.out.println(e));
 
     }
@@ -244,13 +244,12 @@ public class Broker implements INode{
                     /// same logic as pull() function were we receive each chunk
                     /// while receiving chunks we use an Arraylist<byte[]> to keep them and after last chunk we create new MultimediaFile(ArrayList<byte[]>,hashtag)
                     /// after last chunk we use the hashmap queue .get(value.hashtag) to save the multimedia file
-                    if(!Queue.containsKey(value.getTopic())){
-                        Queue.keySet().add(value.getTopic());
-                    }
-                    insertFileToQueue(value.getTopic());
                     updateRegisteredPublishers(value);
                     updateNodes(value);
                     updateBrokerInfo();
+                    insertFileToQueue(value.getTopic());
+                    Queue.forEach((k,v)->
+                            System.out.println("Topic: "+ k +"   MultimediaFile:  "+ v.get(0)));
                 }
 
             }catch(Exception e){
@@ -279,12 +278,13 @@ public class Broker implements INode{
 
             // We already have the publisher registered to Broker
             if(registeredPublishers.containsKey(value.getAddress())){
+                /// Cannot invoke "java.util.ArrayList.add(Object)" because the return value of "java.util.HashMap.get(Object)" is null
                 registeredPublishers.get(value.getAddress())
-                        .addAll(value.getMultimediaFile().Hashtags);
+                        .add(value.getTopic());
                 System.out.println("Pub updated ....");
             }else {
                 // Publisher not registered to Broker
-                registeredPublishers.put(value.getAddress(),  value.getMultimediaFile().Hashtags);
+                registeredPublishers.put(value.getAddress(), value.getTopics());
                 System.out.println("Pub is now registered...");
             }
 
@@ -294,7 +294,7 @@ public class Broker implements INode{
 
         }
 
-        public synchronized void insertFileToQueue(String hashtag){
+        synchronized void insertFileToQueue(String hashtag){
             ArrayList<byte[]> chunks = new ArrayList<>();
             Date dateCreated;
             try {
@@ -307,7 +307,14 @@ public class Broker implements INode{
                         break;
                     }
                 }
-                Queue.get(hashtag).add(new MultimediaFile(chunks,dateCreated));
+                if(Queue.containsKey(hashtag)){
+                    Queue.get(hashtag).add(new MultimediaFile(chunks,dateCreated));
+                }else{
+                    ArrayList<MultimediaFile> list = new ArrayList<>();
+                    list.add(new MultimediaFile(chunks,dateCreated));
+                    Queue.put(hashtag,list);
+                }
+
             }catch (IOException | ClassNotFoundException e){
                 e.printStackTrace();
             }

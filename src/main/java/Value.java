@@ -6,7 +6,7 @@ import java.util.List;
 public class Value implements Serializable {
 
     private MultimediaFile multimediaFile;
-    private ArrayList<String> hashtag;
+    private ArrayList<String> hashtags;
     private Address address;
     private String action = "something";
     private String topic;
@@ -15,16 +15,19 @@ public class Value implements Serializable {
     public Boolean isLast = false;
 
 
-
-
     public Value (MultimediaFile m,SenderType senderType) {
         this.multimediaFile = m;
         this.sender = senderType;
     }
-    /// USED BY PUBLISHER TO SEND HASHTAG TO BROKER
     public Value(Address address , ArrayList<String> topics , SenderType type){
         this.address = address;
-        this.hashtag = topics;
+        this.hashtags = topics;
+        this.sender = type;
+    }
+    /// USED BY PUBLISHER TO SEND HASHTAG TO BROKER
+    public Value(Address address , String topic ,String action, SenderType type){
+        this.address = address;
+        this.topic = topic;
         this.sender = type;
     }
     /// Used by consumer to init()
@@ -39,16 +42,18 @@ public class Value implements Serializable {
         this.address = address;
         this.sender = senderType;
     }
+    // getBrokersList()
     public Value(Address address , String action,SenderType senderType){
         this.address = address;
         this.action = action;
         this.sender = senderType;
     }
+
     // Used by publisher.getBrokersList();
     public Value (MultimediaFile file,Address address,String topic,SenderType senderType){
         this.multimediaFile = file;
         this.address = address;
-        this.hashtag.add(topic);
+        this.hashtags.add(topic);
         this.sender = senderType;
     }
 
@@ -57,7 +62,7 @@ public class Value implements Serializable {
     public Address getAddress() {return address;}
 
     public ArrayList<String> getTopics(){
-        return hashtag;
+        return hashtags;
     }
 
     public String getAction(){
