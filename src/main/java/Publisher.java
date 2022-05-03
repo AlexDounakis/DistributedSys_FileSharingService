@@ -13,15 +13,12 @@ import java.io.*;
 import java.io.File;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.*;
 
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 //public class Publisher extends AppNode extends Thread implements IPublisher implements Runnable {
@@ -62,19 +59,19 @@ public class Publisher extends Thread implements Runnable {
     }
 
     public static void main (String args[]) throws TikaException, IOException, SAXException {
-
-        Publisher pub = new Publisher();
-        String path = "C:\\Users\\alex\\source\\repos\\distributed_sys_streamer\\data\\sample3.mp4";
-
-        HashMap<String,String> my_video = pub.getMetadata(path);
-
-        MultimediaFile video_bytes = new MultimediaFile(IOUtils.toByteArray(new FileInputStream(path))  ,
-                "ChannelName_test",
-                my_video.get("Creation-Date"));
-
-
-        System.out.println(video_bytes.getVideoFileChunk());
-        System.out.println(video_bytes.DateCreated);
+//
+//        Publisher pub = new Publisher();
+//        String path = "C:\\Users\\alex\\source\\repos\\distributed_sys_streamer\\data\\sample3.mp4";
+//
+//        HashMap<String,String> my_video = pub.getMetadata(path);
+//
+////        MultimediaFile video_bytes = new MultimediaFile(IOUtils.toByteArray(new FileInputStream(path))  ,
+////                "ChannelName_test",
+////                my_video.get("Creation-Date"));
+//
+//
+//        System.out.println(video_bytes.getVideoFileChunk());
+//        System.out.println(video_bytes.DateCreated);
     }
 
     // Create Server Socket of Publisher
@@ -359,14 +356,14 @@ public class Publisher extends Thread implements Runnable {
         return null;
     }
 
-    public void sendFile(String text,ArrayList<String> hashtags) {
+    public void sendFile(String text,ArrayList<String> hashtags , Date dateCreated) {
         Runnable task = () -> {
             try {
                 hashtags.forEach(hashtag
                         -> {
                     try {
                         System.out.println("Thread sending file started...");
-                        notifyBroker(text,hashtag);
+                        notifyBroker(text,hashtag,dateCreated);
                         System.out.println("Thread sending text ended ....");
 
                     } catch (Exception e) {
@@ -382,13 +379,14 @@ public class Publisher extends Thread implements Runnable {
         thread.start();
 
     }
-    public void notifyBroker(String text,String hashtag){
+    public void notifyBroker(String text,String hashtag, Date dateCreated){
         try{
             Address address = hashTopic(hashtag);
             System.out.println("Notifying Broker: " + address  + " for:  "+ hashtag);
 
             Socket socketBroker = new Socket(address.getIp(), address.getPort());
             ObjectOutputStream serv_out = new ObjectOutputStream(socketBroker.getOutputStream());
+
 
             serv_out.writeObject(new Value(this.addr,hashtag,SenderType.PUBLISHER));
             serv_out.flush();
@@ -422,17 +420,20 @@ public class Publisher extends Thread implements Runnable {
             }
             /// we have to set IsFirst / IsLast in Value obj
 
-            for(byte[] chunk : chunks){
-                //push()
-                serv_out.writeObject(new Value(new MultimediaFile(chunk , this.channelName,metaMap.get("Date-Created")), this.addr , hashtag,SenderType.PUBLISHER));
+            for(int i=0;i<chunks.size();i++){
+                push(i, chunks ,dateCreated,serv_out);
             }
         } catch (NoSuchAlgorithmException | IOException e) {
             e.printStackTrace();
         }
 
     }
-//    @Override
-//    public void notifyFailure(Broker broker) {}
-//    @Override
-//    public void push(String s, Value v) {}
+    public void push(int i , ArrayList<byte[]> chunks, Date dateCreated, ObjectOutputStream serv_out) throws IOException {
+        if(i==chunks.size()-1){
+            serv_out.writeObject(new Value(new MultimediaFile(chunks.get(i), dateCreated), this.addr ,SenderType.PUBLISHER).isLast = true);
+            serv_out.flush();
+        }
+        serv_out.writeObject(new Value(new MultimediaFile(chunks.get(i), dateCreated), this.addr ,SenderType.PUBLISHER).isLast = false);
+        serv_out.flush();
+    }
 }

@@ -7,10 +7,7 @@ import java.lang.reflect.Array;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class AppNode {
 
@@ -70,12 +67,15 @@ public class AppNode {
                         hashTags.add(hashtag);
                         System.out.println(hashtag + " added to hashtags\n");
                     }
+                    /// USER INPUT FOR DATE CREATED
+                    //
+                    Date dateCreated = new Date();
                     /// video case --> text should be the path location selected after the switch case
                     pub.setFileCollection(text,hashTags);
                     System.out.println("FileCollection:\n");
                     System.out.println(pub.getFileCollection());
                     //pub.sendText(text,hashTags);
-                    pub.sendFile(text,hashTags);
+                    pub.sendFile(text,hashTags,dateCreated);
 //                    pub.sendFile();
                     //pub.push(text);
 

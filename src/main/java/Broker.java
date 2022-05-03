@@ -114,11 +114,17 @@ public class Broker implements INode{
     }
     @Override
     public void updateNodes(Value value) {
-        value.getMultimediaFile().Hashtags.forEach(hashtag ->{
-            if(!topics.contains(hashtag))
-                topics.add(hashtag);
-        });
+        //topics.stream().forEach(t -> t.equalsIgnoreCase(value.getMultimediaFile().Hashtags.stream().forEach();));
+        if(!topics.contains(value.getMultimediaFile().Hashtags)) {
+            topics.addAll(value.getMultimediaFile().Hashtags);
+        }
+//        topics.stream()
+//                .anyMatch(s -> s.equals(value.getMultimediaFile().ChannelName)) ? topics.add(value.getMultimediaFile().ChannelName) : System.out.println("hi");
+        //topics.stream().forEach( t -> brokerTopics.get(address).add(t) );
 
+        if(!topics.contains(value.getMultimediaFile().ChannelName)) {
+            topics.add(value.getMultimediaFile().ChannelName);
+        }
         topics.stream().forEach( e -> System.out.println(e));
 
     }
@@ -194,6 +200,7 @@ public class Broker implements INode{
 //                if(chunk.IsFirst){
 //                    ArrayList<String> _topics = chunk.Hashtags;
 //                }
+
                 consumer_out.writeObject(new Value(chunk,SenderType.BROKER));
                 System.out.println(chunk.getAbsolutePath());
                 System.out.println("SENT CHUNK");
@@ -237,9 +244,11 @@ public class Broker implements INode{
                     /// same logic as pull() function were we receive each chunk
                     /// while receiving chunks we use an Arraylist<byte[]> to keep them and after last chunk we create new MultimediaFile(ArrayList<byte[]>,hashtag)
                     /// after last chunk we use the hashmap queue .get(value.hashtag) to save the multimedia file
-                    /// insertFileToQueue(value);
+                    if(!Queue.containsKey(value.getTopic())){
+                        Queue.keySet().add(value.getTopic());
+                    }
+                    insertFileToQueue(value.getTopic());
                     updateRegisteredPublishers(value);
-                    ///updateRegisteredPublishers(value)   --> check where hashtags are
                     updateNodes(value);
                     updateBrokerInfo();
                 }
@@ -271,7 +280,7 @@ public class Broker implements INode{
             // We already have the publisher registered to Broker
             if(registeredPublishers.containsKey(value.getAddress())){
                 registeredPublishers.get(value.getAddress())
-                        .addAll(value.getMultimediaFile().Hashtags); // OR value.hashtag
+                        .addAll(value.getMultimediaFile().Hashtags);
                 System.out.println("Pub updated ....");
             }else {
                 // Publisher not registered to Broker
@@ -282,6 +291,26 @@ public class Broker implements INode{
             registeredPublishers.forEach((k,v)
                     -> System.out.println("Publisher Address: " + k + "  Topics: " +v)
             );
+
+        }
+
+        public synchronized void insertFileToQueue(String hashtag){
+            ArrayList<byte[]> chunks = new ArrayList<>();
+            Date dateCreated;
+            try {
+                while(true) {
+                    Value chunk = (Value) service_in.readObject();
+                    chunks.add(chunk.getMultimediaFile().getVideoFileChunk());
+                    if (chunk.isLast){
+                        dateCreated = chunk.getMultimediaFile().DateCreated;
+                        System.out.println("Received hole file");
+                        break;
+                    }
+                }
+                Queue.get(hashtag).add(new MultimediaFile(chunks,dateCreated));
+            }catch (IOException | ClassNotFoundException e){
+                e.printStackTrace();
+            }
 
         }
 
