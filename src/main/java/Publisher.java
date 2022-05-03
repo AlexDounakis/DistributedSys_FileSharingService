@@ -1,14 +1,9 @@
-import com.uwyn.jhighlight.fastutil.Hash;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.mp4.MP4Parser;
 import org.apache.tika.sax.BodyContentHandler;
-import org.apache.commons.io.IOUtils;
-import org.bouncycastle.math.ec.ScaleYPointMap;
 import org.xml.sax.SAXException;
-
-import javax.swing.plaf.multi.MultiInternalFrameUI;
 import java.io.*;
 import java.io.File;
 import java.net.ServerSocket;
@@ -19,36 +14,26 @@ import java.util.*;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.concurrent.atomic.AtomicReference;
 
 //public class Publisher extends AppNode extends Thread implements IPublisher implements Runnable {
-public class Publisher extends Thread implements Runnable {
+public class Publisher {
 
     private Socket socket;
-    private Socket socketToReceive;
-    private ServerSocket serverSocket;
     public Address addr;
     public String channelName;
-    public String text;
-    private Value value;
-
     private HashMap<String,ArrayList<String>> FileCollection = new HashMap<>();
-
-    //ProfileName profileName;
-
-
     protected ArrayList<Address> brokers = new ArrayList<>(Arrays.asList(
             /// first random broker IP and Port
             new Address("192.168.56.1", 6000)
     ));
 
+    /// CONSTRUCTORS
     public Publisher(){}
 
     public Publisher(Address _addr , String _channelName){
         this.addr = _addr;
         System.out.println(this.addr);
         this.channelName = _channelName;
-        this.start();
     }
 
     public void setFileCollection(String text , ArrayList<String> topics){
@@ -72,158 +57,6 @@ public class Publisher extends Thread implements Runnable {
 //
 //        System.out.println(video_bytes.getVideoFileChunk());
 //        System.out.println(video_bytes.DateCreated);
-    }
-
-    // Create Server Socket of Publisher
-    @Override
-    public void run(){
-
-        try{
-            serverSocket = new ServerSocket(addr.getPort() +1);
-            //System.out.println(this.addr.getPort());
-            System.out.println("Publisher ready to push ...\n");
-            System.out.println(serverSocket.getLocalPort());
-            while(true){
-
-
-                socketToReceive = serverSocket.accept();
-                System.out.println("socket.accept()\n");
-                Runnable task = () -> {
-
-                    try {
-                        ObjectOutputStream out = new ObjectOutputStream(socketToReceive.getOutputStream());
-                        ObjectInputStream in = new ObjectInputStream(socketToReceive.getInputStream());
-
-                        System.out.println("OBJ INPUT _ OUTPUT STEAM OPENED..... ");
-
-                        var requestedTopics = (ArrayList<String>) in.readObject();
-
-                        requestedTopics.forEach(t->System.out.println(t));
-
-                        for (String topic : requestedTopics) {
-                            long sumOfFiles = FileCollection.entrySet().stream().filter(c -> c.getValue().contains(topic)).count();
-
-                            FileCollection.keySet().forEach(key -> {
-                                if (FileCollection.get(key).contains(topic)) {
-                                    System.out.println("PUSHING");
-                                    System.out.println(key);
-                                    File file = new File(key);
-
-                                    try {
-
-                                        push(key, file, FileCollection.get(key), out , sumOfFiles);
-                                    } catch (TikaException | IOException | SAXException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                            });
-                        }
-                        }catch (IOException | ClassNotFoundException e) {
-                            e.printStackTrace();
-                        }
-                };
-                new Thread(task).start();
-            }
-        }catch (IOException  e) { //| ClassNotFoundException
-//            try {
-//                socketToReceive.close();
-//            } catch (IOException ioException) {
-//                ioException.printStackTrace();
-//            }
-            e.printStackTrace();
-
-        }
-    }
-    //FileCollection <String , ArrayList<String> >   ------>  text to share , hash1
-    //                                               -------> videotoshare.mp4 , hash2
-    //                                               -------> phototoshare.jpg , hash3
-
-    public void push(String content ,File file, ArrayList<String> topics, ObjectOutputStream outputStream , long sumOfFiles) throws TikaException, IOException, SAXException {
-        ArrayList<MultimediaFile> chunks = new ArrayList<>();
-        chunks.add(new MultimediaFile(content));
-
-
-//        if(content.endsWith(".mp4") || content.endsWith(".jpg")) {
-//            System.out.println("GenerateChunks for video or photo");
-//            chunks = generateChunks(file , sumOfFiles);
-//        }
-//        else {
-//            System.out.println("GenerateChunks for text");
-//            try {
-//                String home = System.getProperty("user.home");
-//
-//                File myFile = new File(content + ".txt");
-//                //myFile.createNewFile();
-//                FileWriter myWriter = new FileWriter(content+".txt");
-//                myWriter.write(content);
-//                myWriter.close();
-//                chunks = generateChunks(myFile);
-        //        chunks.get(0).Count = sumOfFiles;
-//            }catch (IOException e){
-//                e.printStackTrace();
-//            }
-//        }
-        /*for (Value chunk : chunks) {
-            chunk.setHashtags(topics);
-        }*/
-//        outputStream.writeObject(new Value(new MultimediaFile(,)));
-        for (MultimediaFile chunk : chunks) {
-//            if(chunk.IsFirst){
-//                chunk.setHashtags(topics);
-//            }
-            chunk.setHashtags(topics);
-            chunk.Count = sumOfFiles;
-            outputStream.writeObject(new Value(chunk,SenderType.PUBLISHER ));
-            System.out.println("SEND CHUNK");
-        }
-
-    }
-
-    /// Extra Function
-    // sendText summons a thread to deal with passing through a message - reading the response
-    public void sendText(String _text , ArrayList<String> hashTags){
-        this.text = _text;
-        // Thread .run() - thread functionality
-        Runnable task = () -> {
-            try {
-
-
-                //hashing
-
-                hashTags.forEach(s
-                        -> {
-                    System.out.println(s);
-                    try {
-                        Address address = hashTopic(s);
-                        //AppNode.brokersList.put(address, ArrayList.add(s));
-                        //Broker.getBrokerList().get(address).add(s);
-                        Socket socketBroker = new Socket(address.getIp(), address.getPort());
-                        ObjectOutputStream serv_out = new ObjectOutputStream(socketBroker.getOutputStream());
-
-                        generateChunks(new File(text));
-                        MultimediaFile file = new MultimediaFile(this.channelName,text);
-                        file.setHashtag(s);
-                        System.out.println(file.getHashtags());
-
-                        serv_out.writeObject(new Value( file,this.addr, SenderType.PUBLISHER));
-                        serv_out.flush();
-                        file = null;
-                        System.out.println("Thread sending text ended ....");
-
-
-                    } catch (NoSuchAlgorithmException | IOException | TikaException | SAXException e) {
-                        e.printStackTrace();
-                    }
-                });
-
-            } catch (Exception e) {
-                e.getStackTrace();
-            }
-        };
-        Thread thread = new Thread(task);
-        thread.start();
-
-
     }
 
     public HashMap<String, String> getMetadata(String file){
@@ -270,15 +103,6 @@ public class Publisher extends Thread implements Runnable {
         return data;
     }
 
-    // Override Functions Implementation
-//    @Override
-//    public void init(int x){
-//    }
-//    @Override
-//    public void connect(){}
-//    @Override
-//    public void disconnect(){}
-//    @Override
     public ArrayList<byte[]> generateChunks(File file ) throws TikaException, IOException, SAXException {
         ArrayList<byte[]> chunks = new ArrayList<>();
         byte[] videoFileChunk = new byte[1024 * 1024/2];// 512KB chunk

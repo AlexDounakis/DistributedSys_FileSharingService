@@ -74,10 +74,8 @@ public class AppNode {
                     pub.setFileCollection(text,hashTags);
                     System.out.println("FileCollection:\n");
                     System.out.println(pub.getFileCollection());
-                    //pub.sendText(text,hashTags);
+
                     pub.sendFile(text,hashTags,dateCreated);
-//                    pub.sendFile();
-                    //pub.push(text);
 
                 } catch (Exception e) {
                     e.printStackTrace();
