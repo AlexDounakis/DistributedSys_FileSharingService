@@ -19,6 +19,7 @@ public class Value implements Serializable {
         this.multimediaFile = m;
         this.sender = senderType;
     }
+    /// Broker to Zookeeper
     public Value(Address address , ArrayList<String> topics , SenderType type){
         this.address = address;
         this.hashtags = topics;

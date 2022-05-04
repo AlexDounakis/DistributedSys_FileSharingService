@@ -114,19 +114,10 @@ public class Broker implements INode{
     }
     @Override
     public void updateNodes(Value value) {
-        //topics.stream().forEach(t -> t.equalsIgnoreCase(value.getMultimediaFile().Hashtags.stream().forEach();));
         if(!topics.contains(value.getTopic())) {
             topics.add(value.getTopic());
         }
-//        topics.stream()
-//                .anyMatch(s -> s.equals(value.getMultimediaFile().ChannelName)) ? topics.add(value.getMultimediaFile().ChannelName) : System.out.println("hi");
-        //topics.stream().forEach( t -> brokerTopics.get(address).add(t) );
-
-//        if(!topics.contains(value.getMultimediaFile().ChannelName)) {
-//            topics.add(value.getMultimediaFile().ChannelName);
-//        }
         topics.stream().forEach( e -> System.out.println(e));
-
     }
     @Override
     public void disconnect(){}
@@ -244,12 +235,15 @@ public class Broker implements INode{
                     /// same logic as pull() function were we receive each chunk
                     /// while receiving chunks we use an Arraylist<byte[]> to keep them and after last chunk we create new MultimediaFile(ArrayList<byte[]>,hashtag)
                     /// after last chunk we use the hashmap queue .get(value.hashtag) to save the multimedia file
-                    updateRegisteredPublishers(value);
+
                     updateNodes(value);
                     updateBrokerInfo();
                     insertFileToQueue(value.getTopic());
-                    Queue.forEach((k,v)->
-                            System.out.println("Topic: "+ k +"   MultimediaFile:  "+ v.get(0)));
+                    Queue.forEach((k,v)->{
+                        System.out.println("Topic: " + k + "   MultimediaFile:  " + v);
+                        v.forEach(file-> System.out.println(file.DateCreated));
+                    });
+
                 }
 
             }catch(Exception e){
@@ -274,26 +268,6 @@ public class Broker implements INode{
             }
         }
 
-        void updateRegisteredPublishers(Value value){
-
-            // We already have the publisher registered to Broker
-            if(registeredPublishers.containsKey(value.getAddress())){
-                /// Cannot invoke "java.util.ArrayList.add(Object)" because the return value of "java.util.HashMap.get(Object)" is null
-                registeredPublishers.get(value.getAddress())
-                        .add(value.getTopic());
-                System.out.println("Pub updated ....");
-            }else {
-                // Publisher not registered to Broker
-                registeredPublishers.put(value.getAddress(), value.getTopics());
-                System.out.println("Pub is now registered...");
-            }
-
-            registeredPublishers.forEach((k,v)
-                    -> System.out.println("Publisher Address: " + k + "  Topics: " +v)
-            );
-
-        }
-
         synchronized void insertFileToQueue(String hashtag){
             ArrayList<byte[]> chunks = new ArrayList<>();
             Date dateCreated;
@@ -303,7 +277,7 @@ public class Broker implements INode{
                     chunks.add(chunk.getMultimediaFile().getVideoFileChunk());
                     if (chunk.isLast){
                         dateCreated = chunk.getMultimediaFile().DateCreated;
-                        System.out.println("Received hole file");
+                        System.out.println(" Received whole file " + dateCreated);
                         break;
                     }
                 }
@@ -321,42 +295,7 @@ public class Broker implements INode{
 
         }
 
-        public void replyText(){
-            try{
-                System.out.println("Method replyText() triggered ... \n");
-                // Read Request serializable and read txt from pub
-                value = (Value) service_in.readObject();
-
-                // Register new Publisher
-                registeredPublishers.put(value.getAddress() ,value.getMultimediaFile().Hashtags );
-
-                System.out.println(value.getMultimediaFile().Hashtags);
-//                String text = service_in.readUTF();
-//                System.out.println(text);
-
-                // Write serializable back to pub
-                System.out.println("Text to send back to pub: \n");
-                String reply_text =new BufferedReader(new InputStreamReader(System.in)).readLine();
-                System.out.println("my reply is: " + reply_text);
-
-                Request req = new Request(value.getAddress() , reply_text);
-                System.out.println("Before .writeUTF ");
-                //service_out = new ObjectOutputStream(socket.getOutputStream());
-//
-                service_out.writeObject(req);
-                System.out.println(" .writeObject(req)");
-
-                service_out.flush();
-                System.out.println(" .flush()");
-
-            }catch (IOException | ClassNotFoundException e){
-                e.printStackTrace();
-            }
-
-        }
-
     }
-
 
     ///////////////// CONSUMER THREAD INNER CLASS///////////
     public class consumerThread extends Thread{

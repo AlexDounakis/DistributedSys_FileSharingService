@@ -258,10 +258,10 @@ public class Publisher {
             Value valueToSend = new Value(new MultimediaFile(chunks.get(i), dateCreated), this.addr ,SenderType.PUBLISHER);
             valueToSend.isLast = true;
             serv_out.writeObject(valueToSend);
-            serv_out.flush();
-        }
 
-        serv_out.writeObject(new Value(new MultimediaFile(chunks.get(i), dateCreated), this.addr ,SenderType.PUBLISHER));
+        }else {
+            serv_out.writeObject(new Value(new MultimediaFile(chunks.get(i), dateCreated), this.addr, SenderType.PUBLISHER));
+        }
         serv_out.flush();
     }
 }
