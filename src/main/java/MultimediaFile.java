@@ -14,9 +14,11 @@ public class MultimediaFile implements Serializable {
     String Framerate;
     String FrameWidth;
     String FrameHeight;
-    ArrayList<String> Hashtags;
+    ArrayList<String> Hashtags = new ArrayList<>();
     byte[] FileChunk;
-    boolean IsLast = false;
+    public boolean IsFirst = false;
+    public boolean IsLast = false;
+    public long Count = 0;
 
     String text;
 
@@ -33,6 +35,10 @@ public class MultimediaFile implements Serializable {
         this.FrameHeight = frameHeight;
         this.Hashtags = hashtags;
         this.FileChunk = FileChunk;
+        this.AbsolutePath = absolutePath;
+    }
+
+    public MultimediaFile(String absolutePath){
         this.AbsolutePath = absolutePath;
     }
 
@@ -60,7 +66,7 @@ public class MultimediaFile implements Serializable {
         this.DateCreated = dateCreated;
     }
     public MultimediaFile( String channelName , String text){
-        this.FileChunk = FileChunk;
+        //this.FileChunk = FileChunk;
         this.ChannelName = channelName;
         this.text = text;
     }
@@ -71,7 +77,7 @@ public class MultimediaFile implements Serializable {
     public void setHashtags(ArrayList<String> hashtags) {
         this.Hashtags= hashtags;
     }
-
+    public void setHashtag(String topic){this.Hashtags.add(topic);}
     public ArrayList<String> getHashtags() {
         return Hashtags;
     }
@@ -86,6 +92,7 @@ public class MultimediaFile implements Serializable {
         this.IsLast = isLast;
     }
     public boolean IsLast(){return this.IsLast;}
+//    public void setIsFirst(boolean isFirst)
     public byte[] getVideoFileChunk() {
         return FileChunk;
     }

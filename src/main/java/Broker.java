@@ -23,7 +23,7 @@ public class Broker implements INode{
     private HashMap<Address,ArrayList<String>> registeredPublishers;
     private HashMap<Address,ArrayList<String>>  registeredConsumers;
     // Total of initialized Clients , we dont keep track of topics etc.
-    private ArrayList<Address> initClients;
+
 
     // this list includes both channel names and specific topics
     public static ArrayList<String> topics = new ArrayList<>();
@@ -38,7 +38,6 @@ public class Broker implements INode{
         } catch (IOException e) {
             e.printStackTrace();
         }
-        initClients = new ArrayList<>();
         registeredConsumers = new HashMap<>();
         registeredPublishers = new HashMap<>();
         init(5);
@@ -67,6 +66,7 @@ public class Broker implements INode{
 
                 socket = serverSocket.accept();
                 System.out.println("socket.accept()\n");
+                System.out.println(socket.getPort());
 
                 Runnable task = () -> {
                     try {
@@ -74,7 +74,7 @@ public class Broker implements INode{
                         ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
 
                         Value value = (Value)in.readObject();
-
+                        System.out.println(value.sender);
                         if(value.sender == SenderType.PUBLISHER){
                             new Thread(new publisherThread(socket , in , out ,value))
                                     .start();
@@ -113,9 +113,10 @@ public class Broker implements INode{
     }
     @Override
     public void updateNodes(Value value) {
-
         //topics.stream().forEach(t -> t.equalsIgnoreCase(value.getMultimediaFile().Hashtags.stream().forEach();));
-        topics.addAll(value.getMultimediaFile().Hashtags);
+        if(!topics.contains(value.getMultimediaFile().Hashtags)) {
+            topics.addAll(value.getMultimediaFile().Hashtags);
+        }
 //        topics.stream()
 //                .anyMatch(s -> s.equals(value.getMultimediaFile().ChannelName)) ? topics.add(value.getMultimediaFile().ChannelName) : System.out.println("hi");
         //topics.stream().forEach( t -> brokerTopics.get(address).add(t) );
@@ -166,34 +167,46 @@ public class Broker implements INode{
 
     }
 
-    public void pull(Socket consumerSocket , Address pubAddress , ArrayList<String> topics){
+    public void pull(ObjectOutputStream consumer_out , Address pubAddress , ArrayList<String> topics){
         ObjectInputStream pub_in;
         ObjectOutputStream pub_out;
 
-        ObjectInputStream cons_in;
-        ObjectOutputStream cons_out;
+//        ObjectInputStream cons_in;
+//        ObjectOutputStream cons_out;
 
         MultimediaFile chunk;
 
         try{
-            Socket pubSocket = new Socket(pubAddress.getIp(),pubAddress.getPort());
+
+            Socket pubSocket = new Socket(pubAddress.getIp(),pubAddress.getPort()+1);
+            System.out.println(pubSocket.getPort() + "EXPECTED: " + (pubAddress.getPort()+1));
 
             pub_in = new ObjectInputStream(pubSocket.getInputStream());
             pub_out = new ObjectOutputStream(pubSocket.getOutputStream());
+            System.out.println("PubSocket open ");
 
             pub_out.writeObject(topics);
             pub_out.flush();
 
-            cons_out = new ObjectOutputStream(consumerSocket.getOutputStream());
-            cons_in = new ObjectInputStream(consumerSocket.getInputStream());
-
+            //cons_out = new ObjectOutputStream(consumerSocket.getOutputStream());
+            //cons_in = new ObjectInputStream(consumerSocket.getInputStream());
+            //System.out.println("Consumer Socket open ");
             while(true){
-                chunk = (MultimediaFile)pub_in.readObject();
-                cons_out.writeObject(chunk);
-                if(chunk.IsLast){
-                    System.out.println("Received all chunks");
-                    break;
-                }
+
+                Value value = (Value)pub_in.readObject();
+                System.out.println("GOT CHUNK");
+                chunk = value.getMultimediaFile();
+//                if(chunk.IsFirst){
+//                    ArrayList<String> _topics = chunk.Hashtags;
+//                }
+                consumer_out.writeObject(new Value(chunk,SenderType.BROKER));
+                System.out.println(chunk.getAbsolutePath());
+                System.out.println("SENT CHUNK");
+                break;
+//                if(chunk.IsLast){
+//                    System.out.println("Received all chunks");
+//                    break;
+//                }
             }
 
         }catch(IOException | ClassNotFoundException e){
@@ -331,12 +344,10 @@ public class Broker implements INode{
             try{
 
                 System.out.println("Consumer Thread running ...\n");
-                // consumer Initialization
-                System.out.println(value.getAddress());
-                if(!initClients.contains(value.getAddress())){
+                if(!value.initialized){
 
                     init();
-                    initClients.add(value.getAddress());
+                    INode.initClients.add(value.getAddress());
                     //service_out.writeObject("USER REGISTERED");
 
                 }/// Consumer Initialized
@@ -344,24 +355,24 @@ public class Broker implements INode{
                     updateConsumers(value);
 
                     requestedTopics = value.getTopics();
+                    System.out.println(requestedTopics);
                     for(Address pubAddress : registeredPublishers.keySet()){
                         var pubTopics = registeredPublishers.get(pubAddress);
+                        System.out.println(pubTopics);
                         if(pubTopics.stream()
                                 .anyMatch(requestedTopics::contains)){
-                            pull(socket,pubAddress,requestedTopics);
+                            System.out.println("PULLING");
+                            pull(service_out,pubAddress,requestedTopics);
                         }
                     }
                 }
+                System.out.println("Consumer thread ended....");
             }catch(Exception e){
                 e.printStackTrace();
             }
         }
         void init(){
             try {
-//
-//                ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-//                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-
                 service_out.writeObject(new HashMap<>(getBrokerList()));
                 service_out.flush();
 
@@ -369,6 +380,7 @@ public class Broker implements INode{
                 e.printStackTrace();
             }
         }
+
         void updateConsumers(Value value){
 
             // We already have the consumer registered to Broker

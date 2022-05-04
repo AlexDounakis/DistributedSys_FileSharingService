@@ -9,6 +9,7 @@ public interface INode {
 
     static  final Address ZookeeperAddress = new Address("127.0.0.1",5000);
 
+    ArrayList<Address> initClients = new ArrayList<>();
     //void init(Request request) throws IOException;
 
     //void connect() throws IOException;
