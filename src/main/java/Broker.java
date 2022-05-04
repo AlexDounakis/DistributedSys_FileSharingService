@@ -107,6 +107,13 @@ public class Broker implements INode{
             }
         }
     }
+
+    public ArrayList<MultimediaFile> sortByDate(ArrayList<MultimediaFile> mfList) {
+
+        Collections.sort(mfList, MultimediaFile.DateComparator);
+        return mfList;
+    }
+
     /// Broker init() is responsible serving the client(either pub or cons), the brokersList {< <Ip,Port>,ArrayList<String>(Topics) >}
     @Override
     public void init(int x){
@@ -331,6 +338,15 @@ public class Broker implements INode{
 
                     requestedTopics = value.getTopics();
                     System.out.println(requestedTopics);
+                    for(String top : Queue.keySet()){
+                        if (top.equals(requestedTopics.get(0))) {
+                            System.out.println("before sort");
+                            System.out.println(Queue.get(top));
+                            var sortedTopics = sortByDate(Queue.get(top));
+                            System.out.println("after sort");
+                            System.out.println(sortedTopics);
+                        }
+                    }
                     for(Address pubAddress : registeredPublishers.keySet()){
                         var pubTopics = registeredPublishers.get(pubAddress);
                         System.out.println(pubTopics);

@@ -2,6 +2,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Comparator;
 
 public class MultimediaFile implements Serializable {
 
@@ -16,6 +17,16 @@ public class MultimediaFile implements Serializable {
 
     String text;
 
+    public static Comparator <MultimediaFile> DateComparator = (m1, m2) -> {
+        Date Date1 = m1.DateCreated;
+        Date Date2 = m2.DateCreated;
+
+        //ascending order
+        //return Date1.compareTo(Date2);
+
+        //descending order
+        return Date2.compareTo(Date1);
+    };
 
     public MultimediaFile(String absolutePath){
         this.AbsolutePath = absolutePath;

@@ -74,7 +74,7 @@ public class AppNode {
                     pub.setFileCollection(text,hashTags);
                     System.out.println("FileCollection:\n");
                     System.out.println(pub.getFileCollection());
-
+                    System.out.println("DATEEEEE!!!: " + dateCreated);
                     pub.sendFile(text,hashTags,dateCreated);
 
                 } catch (Exception e) {
