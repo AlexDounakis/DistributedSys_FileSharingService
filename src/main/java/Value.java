@@ -50,14 +50,6 @@ public class Value implements Serializable {
         this.sender = senderType;
     }
 
-    // Used by publisher.getBrokersList();
-    public Value (MultimediaFile file,Address address,String topic,SenderType senderType){
-        this.multimediaFile = file;
-        this.address = address;
-        this.hashtags.add(topic);
-        this.sender = senderType;
-    }
-
     public MultimediaFile getMultimediaFile() {return multimediaFile;}
 
     public Address getAddress() {return address;}

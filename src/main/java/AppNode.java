@@ -87,15 +87,17 @@ public class AppNode {
                     System.out.println("Enter topics of interest: \n");
                     BufferedReader br  = new BufferedReader(new InputStreamReader(System.in));
                     String topic;
-                    ArrayList<String> topics_one_by_one = new ArrayList();
-
+                    boolean registered = false;
                     System.out.println("Type end to Stop");
 
                     while (!(topic = br.readLine()).equals("end")) {
-                        topics_one_by_one.add(topic);
-                        System.out.println(topic + " added to topics of interest\n");
+                        con.register(topic);
+                        System.out.println("Registered to: "+topic );
+                        registered = true;
                     }
-                    con.sendTopics(topics_one_by_one);
+//                    if(registered){
+//                        con.pull();
+//                    }
 
                 } catch (IOException e) {
                     e.printStackTrace();

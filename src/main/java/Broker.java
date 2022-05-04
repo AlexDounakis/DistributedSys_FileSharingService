@@ -20,7 +20,6 @@ public class Broker implements INode{
     private ServerSocket serverSocket;
 
     // Registered Publishers and Consumers with topics
-    private HashMap<Address,ArrayList<String>> registeredPublishers;
     private HashMap<Address,ArrayList<String>>  registeredConsumers;
     // Total of initialized Clients , we dont keep track of topics etc.
 
@@ -40,7 +39,6 @@ public class Broker implements INode{
             e.printStackTrace();
         }
         registeredConsumers = new HashMap<>();
-        registeredPublishers = new HashMap<>();
         init(5);
         connect();
 
@@ -320,9 +318,6 @@ public class Broker implements INode{
 
         @Override
         public void run(){
-
-            ArrayList<String> requestedTopics;
-
             try{
 
                 System.out.println("Consumer Thread running ...\n");
@@ -335,27 +330,28 @@ public class Broker implements INode{
                 }/// Consumer Initialized
                 else{
                     updateConsumers(value);
-
-                    requestedTopics = value.getTopics();
-                    System.out.println(requestedTopics);
-                    for(String top : Queue.keySet()){
-                        if (top.equals(requestedTopics.get(0))) {
+                    for(String topic : Queue.keySet()){
+                        if (topic.equals(value.getTopic())) {
                             System.out.println("before sort");
-                            System.out.println(Queue.get(top));
-                            var sortedTopics = sortByDate(Queue.get(top));
+                            System.out.println(Queue.get(topic));
+                            var sortedFiles = sortByDate(Queue.get(topic));
                             System.out.println("after sort");
-                            System.out.println(sortedTopics);
+                            System.out.println(sortedFiles);
+                            //sendFiles();
                         }
+//                        else{
+//                            service_out.writeObject(new Value());
+//                        }
                     }
-                    for(Address pubAddress : registeredPublishers.keySet()){
-                        var pubTopics = registeredPublishers.get(pubAddress);
-                        System.out.println(pubTopics);
-                        if(pubTopics.stream()
-                                .anyMatch(requestedTopics::contains)){
-                            System.out.println("PULLING");
-                            pull(service_out,pubAddress,requestedTopics);
-                        }
-                    }
+//                    for(Address pubAddress : registeredPublishers.keySet()){
+//                        var pubTopics = registeredPublishers.get(pubAddress);
+//                        System.out.println(pubTopics);
+//                        if(pubTopics.stream()
+//                                .anyMatch(requestedTopics::contains)){
+//                            System.out.println("PULLING");
+//                            pull(service_out,pubAddress,requestedTopics);
+//                        }
+//                    }
                 }
                 System.out.println("Consumer thread ended....");
             }catch(Exception e){
@@ -381,7 +377,9 @@ public class Broker implements INode{
                 System.out.println("Con updated ....");
             }else {
                 // Publisher not registered to Broker
-                registeredConsumers.put(value.getAddress(),  value.getTopics());
+                ArrayList<String> listWithTopic = new ArrayList<>();
+                listWithTopic.add(value.getTopic());
+                registeredConsumers.put(value.getAddress(),  listWithTopic);
                 System.out.println("Con is now registered...");
             }
 
