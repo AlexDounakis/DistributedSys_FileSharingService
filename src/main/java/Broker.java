@@ -330,6 +330,7 @@ public class Broker implements INode{
                             var sortedFiles = sortByDate(Queue.get(topic));
                             System.out.println("after sort");
                             System.out.println(sortedFiles);
+//                            service_out.writeObject(new Value(address , topic ));
                             sendFiles(sortedFiles, value);
                         }
 //                        else{
@@ -369,6 +370,21 @@ public class Broker implements INode{
                 ObjectOutputStream out = new ObjectOutputStream(socketToConsumer.getOutputStream());
 
                 files.forEach(file -> {
+                    try{
+                        List<byte[]> chunks = file.getVideoFileChunks();
+                        out.writeObject(new Value(address , value.getTopic() , SenderType.BROKER));
+                        chunks.forEach(chunk ->{
+                            try{
+                                out.writeObject(new Value(new MultimediaFile(chunk , file.DateCreated) , address , SenderType.BROKER));
+                                out.flush();
+                            }catch(IOException e){
+                                e.printStackTrace();
+                            }
+
+                        });
+                    }catch(IOException e){
+                        e.printStackTrace();
+                    }
 
                 });
             }catch(IOException e){
