@@ -87,12 +87,9 @@ public class Broker implements INode{
                     } catch (IOException | ClassNotFoundException e) {
                         e.printStackTrace();
                     }
-
-
                 };
                 new Thread(task).start();
             }
-
         }catch (IOException  e) { //| ClassNotFoundException
             e.printStackTrace();
 
@@ -236,11 +233,6 @@ public class Broker implements INode{
                     init();
                     System.out.println("Get Brokers........");
                 }else{
-                    /// we have open socket from publisher and we must get each chunk from inputstream() incoming from publisher.push()
-                    /// same logic as pull() function were we receive each chunk
-                    /// while receiving chunks we use an Arraylist<byte[]> to keep them and after last chunk we create new MultimediaFile(ArrayList<byte[]>,hashtag)
-                    /// after last chunk we use the hashmap queue .get(value.hashtag) to save the multimedia file
-
                     updateNodes(value);
                     updateBrokerInfo();
                     insertFileToQueue(value.getTopic());
@@ -248,7 +240,6 @@ public class Broker implements INode{
                         System.out.println("Topic: " + k + "   MultimediaFile:  " + v);
                         v.forEach(file-> System.out.println(file.DateCreated));
                     });
-
                 }
 
             }catch(Exception e){
@@ -325,9 +316,8 @@ public class Broker implements INode{
 
                     init();
                     INode.initClients.add(value.getAddress());
-                    //service_out.writeObject("USER REGISTERED");
 
-                }/// Consumer Initialized
+                }/// Consumer is Initialized
                 else{
                     updateConsumers(value);
                     for(String topic : Queue.keySet()){
@@ -337,7 +327,7 @@ public class Broker implements INode{
                             var sortedFiles = sortByDate(Queue.get(topic));
                             System.out.println("after sort");
                             System.out.println(sortedFiles);
-                            //sendFiles();
+                            sendFiles(sortedFiles, value);
                         }
 //                        else{
 //                            service_out.writeObject(new Value());
@@ -368,6 +358,20 @@ public class Broker implements INode{
             }
         }
 
+        void sendFiles(ArrayList<MultimediaFile> files , Value value){
+            try {
+                Socket socketToConsumer = new Socket(value.getAddress().getIp(), value.getAddress().getPort() + 1);
+
+                ObjectInputStream in = new ObjectInputStream(socketToConsumer.getInputStream());
+                ObjectOutputStream out = new ObjectOutputStream(socketToConsumer.getOutputStream());
+
+                files.forEach(file -> {
+
+                });
+            }catch(IOException e){
+                e.printStackTrace();
+            }
+        }
         void updateConsumers(Value value){
 
             // We already have the consumer registered to Broker
