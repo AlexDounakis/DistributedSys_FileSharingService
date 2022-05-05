@@ -7,6 +7,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 
 public class Broker implements INode{
@@ -26,7 +27,8 @@ public class Broker implements INode{
 
     // this list includes both channel names and specific topics
     public static ArrayList<String> topics = new ArrayList<>();
-    private HashMap<String , ArrayList<MultimediaFile>> Queue = new HashMap<>();
+    // handles thread parallelism
+    private Map<AtomicReference<String>, ArrayList<MultimediaFile>> Queue = new ConcurrentHashMap< >();
 
     // Constructor
     public Broker(String Ip , int port){
@@ -277,12 +279,13 @@ public class Broker implements INode{
                         break;
                     }
                 }
+//                Queue.putIfAbsent(new AtomicReference<String>(hashtag) , new AtomicReference<ArrayList<MultimediaFile>>(file));
                 if(Queue.containsKey(hashtag)){
                     Queue.get(hashtag).add(new MultimediaFile(chunks,dateCreated));
                 }else{
                     ArrayList<MultimediaFile> list = new ArrayList<>();
                     list.add(new MultimediaFile(chunks,dateCreated));
-                    Queue.put(hashtag,list);
+                    Queue.put(new AtomicReference<>(hashtag),list);
                 }
 
             }catch (IOException | ClassNotFoundException e){
@@ -320,7 +323,7 @@ public class Broker implements INode{
                 }/// Consumer is Initialized
                 else{
                     updateConsumers(value);
-                    for(String topic : Queue.keySet()){
+                    for(AtomicReference<String> topic : Queue.keySet()){
                         if (topic.equals(value.getTopic())) {
                             System.out.println("before sort");
                             System.out.println(Queue.get(topic));
