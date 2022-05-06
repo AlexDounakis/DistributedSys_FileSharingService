@@ -242,8 +242,7 @@ public class Publisher {
                 if (flag == 0) { //file not found
                     System.out.println(text + " not found");
                 }
-                //sumOfFiles TBD
-                //chunks = generateChunks(file , sumOfFiles);
+                chunks = generateChunks(file);
             }
             else {
                 System.out.println("GenerateChunks for text");
@@ -270,6 +269,10 @@ public class Publisher {
             }
         } catch (NoSuchAlgorithmException | IOException e) {
             e.printStackTrace();
+        } catch (TikaException e) {
+            throw new RuntimeException(e);
+        } catch (SAXException e) {
+            throw new RuntimeException(e);
         }
 
     }
