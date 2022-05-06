@@ -242,7 +242,8 @@ public class Publisher {
                 if (flag == 0) { //file not found
                     System.out.println(text + " not found");
                 }
-                chunks = generateChunks(file , sumOfFiles); //sumOfFiles TBD
+                //sumOfFiles TBD
+                //chunks = generateChunks(file , sumOfFiles);
             }
             else {
                 System.out.println("GenerateChunks for text");
