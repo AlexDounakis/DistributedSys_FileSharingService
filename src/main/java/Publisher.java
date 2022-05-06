@@ -102,7 +102,7 @@ public class Publisher {
         return data;
     }
 
-    public ArrayList<byte[]> generateChunks(File file ) throws TikaException, IOException, SAXException {
+    public ArrayList<byte[]> generateChunks(File file) throws TikaException, IOException, SAXException {
         ArrayList<byte[]> chunks = new ArrayList<>();
         byte[] videoFileChunk = new byte[1024 * 1024/2];// 512KB chunk
 //        var metaMap = getMetadata(file.getAbsolutePath());
@@ -227,16 +227,14 @@ public class Publisher {
                 System.out.println("GenerateChunks for text");
                 try {
                     String home = System.getProperty("user.home");
-
-                    ///// THIS MUST CHANGE ///////
-                    File myFile = new File(text + ".txt");
-                    //myFile.createNewFile();
-                    FileWriter myWriter = new FileWriter(text + ".txt");
+                    String fileName = text.substring(0,50);
+                    File file = new File("data/" + fileName + ".txt");
+                    file.createNewFile();
+                    FileWriter myWriter = new FileWriter(file);
                     myWriter.write(text);
                     myWriter.close();
-                    metaMap = getMetadata(myFile.getAbsolutePath());
-                    chunks = generateChunks(myFile);
-
+                    metaMap = getMetadata(file.getAbsolutePath());
+                    chunks = generateChunks(file);
 
                 } catch (Exception e) {
                     e.printStackTrace();
