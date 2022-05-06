@@ -226,6 +226,7 @@ public class Publisher {
             else {
                 System.out.println("GenerateChunks for text");
                 try {
+
                     String home = System.getProperty("user.home");
                     String fileName = text.substring(0,50);
                     File file = new File("data/" + fileName + ".txt");
