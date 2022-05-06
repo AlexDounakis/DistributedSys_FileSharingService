@@ -7,10 +7,7 @@ import java.lang.reflect.Array;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class AppNode {
 
@@ -55,11 +52,8 @@ public class AppNode {
         while( type != 0){
             // Publisher logic
             if(type == 1) {
-                //System.out.println("Type message to send:");
                 try {
-
-                    // upload
-                    //pub.init(5);
+                    //switch case with user input to determine multimedia file , text photo or video
                     System.out.println("Enter text to share: \n");
                     String text = new BufferedReader(new InputStreamReader(System.in)).readLine();
 
@@ -68,16 +62,20 @@ public class AppNode {
                     BufferedReader br  = new BufferedReader(new InputStreamReader(System.in));
                     String hashtag;
 
-                    //!hashtag.readLine().equalsIgnoreCase("end")
                     while(!(hashtag = br.readLine()).equals("end")){
 
                         hashTags.add(hashtag);
                         System.out.println(hashtag + " added to hashtags\n");
                     }
+                    /// USER INPUT FOR DATE CREATED
+                    //
+                    Date dateCreated = new Date();
+                    /// video case --> text should be the path location selected after the switch case
                     pub.setFileCollection(text,hashTags);
                     System.out.println("FileCollection:\n");
                     System.out.println(pub.getFileCollection());
-                    pub.sendText(text,hashTags);
+                    System.out.println("DATEEEEE!!!: " + dateCreated);
+                    pub.sendFile(text,hashTags,dateCreated);
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -89,15 +87,17 @@ public class AppNode {
                     System.out.println("Enter topics of interest: \n");
                     BufferedReader br  = new BufferedReader(new InputStreamReader(System.in));
                     String topic;
-                    ArrayList<String> topics_one_by_one = new ArrayList();
-
+                    boolean registered = false;
                     System.out.println("Type end to Stop");
 
                     while (!(topic = br.readLine()).equals("end")) {
-                        topics_one_by_one.add(topic);
-                        System.out.println(topic + " added to topics of interest\n");
+                        con.register(topic);
+                        System.out.println("Registered to: "+topic );
+                        registered = true;
                     }
-                    con.sendTopics(topics_one_by_one);
+//                    if(registered){
+//                        con.pull();
+//                    }
 
                 } catch (IOException e) {
                     e.printStackTrace();

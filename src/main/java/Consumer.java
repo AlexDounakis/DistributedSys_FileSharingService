@@ -1,16 +1,23 @@
+import org.apache.cxf.endpoint.Server;
+
 import java.io.*;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Consumer implements IConsumer {
 
     private Socket socket;
+    private ServerSocket serverSocket;
+    private Socket socketToReceive;
     public Address addr;
     private Value value;
     ArrayList<String> topics = new ArrayList();
+    private HashMap<String,ArrayList<MultimediaFile>> myMultimediaFiles = new HashMap<>();
 
     protected ArrayList<Address> brokers = new ArrayList<>(Arrays.asList(
             /// first random broker IP and Port
@@ -20,7 +27,6 @@ public class Consumer implements IConsumer {
     ));
 
     public void disconnect(String s) {}
-    public void register(String s) {}
     public void showConversationData(String s, Value v) {}
 
     public Consumer(){}
@@ -74,62 +80,37 @@ public class Consumer implements IConsumer {
 
     }
 
-    public void sendTopics(ArrayList<String> topics){
-        this.topics.addAll(topics);
+    public void register(String hashtag){
+        this.topics.add(hashtag);
 
         // Thread .run() - thread functionality
         Runnable task = () -> {
             try {
                 System.out.println("thread Send Topics started ...");
-                ArrayList<String> temp = new ArrayList();
+                AppNode.brokersList
+                        .forEach((k, t) ->
+                        {
+                            System.out.println(k + " " + t + "");
+                            if (t.contains(hashtag)) {
+                                Socket socketToBroker;
+                                try {
+                                    socketToBroker = new Socket(k.getIp(), k.getPort());
+                                    System.out.println("Connected to " + k.getIp() + ":" + k.getPort());
 
-                //AtomicReference<Address> brokerAddress = null;
+                                    ObjectOutputStream service_out = new ObjectOutputStream(socketToBroker.getOutputStream());
+                                    ObjectInputStream service_in = new ObjectInputStream(socketToBroker.getInputStream());
 
-                this.topics.forEach(s -> {
+                                    service_out.writeObject(new Value(this.addr,hashtag , "something",SenderType.CONSUMER));
+                                    service_out.flush();
 
-                            System.out.println(s);
-                            System.out.println(AppNode.brokersList);
-                            AppNode.brokersList.forEach((k, t)
-                                    -> {
-                                System.out.println(k + " " + t + "");
-                                if (t.contains(s)) {
-                                    temp.add(s);
-                                    Socket socketToBroker;
-                                    try {
-                                        System.out.println(k.getPort());
-                                        socketToBroker = new Socket(k.getIp(), k.getPort());
-                                        System.out.println("Connected to " + k.getIp() + ":" + k.getPort());
+                                    socketToBroker.close();
 
-                                        ObjectOutputStream service_out = new ObjectOutputStream(socketToBroker.getOutputStream());
-                                        ObjectInputStream service_in = new ObjectInputStream(socketToBroker.getInputStream());
-
-                                        service_out.writeObject(new Value(this.addr, temp, SenderType.CONSUMER));
-                                        service_out.flush();
-                                        temp.clear();
-
-                                        System.out.println("waiting for files .... ");
-//                                        if(service_in.readObject())
-                                        receiveFile(service_in);
-
-                                    } catch (Exception e) {
-
-                                        e.printStackTrace();
-                                    }
-
-//                                finally {
-//                                    try {
-//                                        // close socket connection
-////                                        socketToBroker.close();
-//                                        System.out.println("send topics socket.close()");
-//                                    } catch (IOException ioException) {
-//                                        ioException.printStackTrace();
-//                                    }
-//                                }
+                                } catch (Exception e) {
+                                    e.printStackTrace();
                                 }
+                            }
 
-                            });
-                        }
-                );
+                        });
             } catch (Exception e) {
                 e.getStackTrace();
             }
@@ -139,8 +120,46 @@ public class Consumer implements IConsumer {
         thread.start();
     }
 
+    public void pull(){
+        Runnable task =() ->{
+            try{
+                 serverSocket = new ServerSocket(addr.getPort()+1);
+                while(true){
+                    socketToReceive = serverSocket.accept();
+                    System.out.println("consumer socket.accept()\n");
+                    Runnable _task = () ->{
+                        try{
+                            ObjectOutputStream out = new ObjectOutputStream(socketToReceive.getOutputStream());
+                            ObjectInputStream in = new ObjectInputStream(socketToReceive.getInputStream());
+
+                            Value chunkInValue = (Value)in.readObject();
+                            MultimediaFile chunk = chunkInValue.getMultimediaFile();
+
+
+
+
+                        }catch (IOException | ClassNotFoundException e){
+                            e.printStackTrace();
+                        }
+                    };
+                    new Thread(_task).start();
+                }
+
+
+
+            }catch(IOException e){
+                e.printStackTrace();
+            }
+        };
+        new Thread(task).start();
+    }
+
+    public void receive(){
+
+    }
+
     public void receiveFile(ObjectInputStream in){
-        String home = System.getProperty("user.home");
+        /*String home = System.getProperty("user.home");
         try {
 
             Value chunkInValue = (Value) in.readObject();
@@ -151,24 +170,24 @@ public class Consumer implements IConsumer {
             System.out.println(chunk.getAbsolutePath());
 
             long sumOfFiles = chunk.Count;
-            while(sumOfFiles >0){
-                if(chunk.IsFirst){
-                    //saveHashtags(chunk);
-
-                }else if(chunk.IsLast){
-                    System.out.println("GOT File: ");
-                }
-                //saveFile(chunk);
-                chunkInValue = (Value)in.readObject();
-                chunk = chunkInValue.getMultimediaFile();
-//                System.out.println(chunk.Hashtags);
-                System.out.println(chunk.getAbsolutePath());
-
-            }
+//            while(sumOfFiles >0){
+//                if(chunk.IsFirst){
+//                    //saveHashtags(chunk);
+//
+//                }else if(chunk.IsLast){
+//                    System.out.println("GOT File: ");
+//                }
+//                //saveFile(chunk);
+//                chunkInValue = (Value)in.readObject();
+//                chunk = chunkInValue.getMultimediaFile();
+////                System.out.println(chunk.Hashtags);
+//                System.out.println(chunk.getAbsolutePath());
+//
+//            }
             System.out.println("GOT ALL FILES....");
         }catch (IOException | ClassNotFoundException e){
             e.printStackTrace();
-        }
+        }*/
     }
 
 }

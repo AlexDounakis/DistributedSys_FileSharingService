@@ -7,6 +7,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 
 public class Broker implements INode{
@@ -20,13 +21,14 @@ public class Broker implements INode{
     private ServerSocket serverSocket;
 
     // Registered Publishers and Consumers with topics
-    private HashMap<Address,ArrayList<String>> registeredPublishers;
     private HashMap<Address,ArrayList<String>>  registeredConsumers;
     // Total of initialized Clients , we dont keep track of topics etc.
 
 
     // this list includes both channel names and specific topics
     public static ArrayList<String> topics = new ArrayList<>();
+    // handles thread parallelism
+    private Map<AtomicReference<String>, ArrayList<MultimediaFile>> Queue = new ConcurrentHashMap< >();
 
     // Constructor
     public Broker(String Ip , int port){
@@ -39,7 +41,6 @@ public class Broker implements INode{
             e.printStackTrace();
         }
         registeredConsumers = new HashMap<>();
-        registeredPublishers = new HashMap<>();
         init(5);
         connect();
 
@@ -88,12 +89,9 @@ public class Broker implements INode{
                     } catch (IOException | ClassNotFoundException e) {
                         e.printStackTrace();
                     }
-
-
                 };
                 new Thread(task).start();
             }
-
         }catch (IOException  e) { //| ClassNotFoundException
             e.printStackTrace();
 
@@ -106,6 +104,13 @@ public class Broker implements INode{
             }
         }
     }
+
+    public ArrayList<MultimediaFile> sortByDate(ArrayList<MultimediaFile> mfList) {
+
+        Collections.sort(mfList, MultimediaFile.DateComparator);
+        return mfList;
+    }
+
     /// Broker init() is responsible serving the client(either pub or cons), the brokersList {< <Ip,Port>,ArrayList<String>(Topics) >}
     @Override
     public void init(int x){
@@ -113,19 +118,10 @@ public class Broker implements INode{
     }
     @Override
     public void updateNodes(Value value) {
-        //topics.stream().forEach(t -> t.equalsIgnoreCase(value.getMultimediaFile().Hashtags.stream().forEach();));
-        if(!topics.contains(value.getMultimediaFile().Hashtags)) {
-            topics.addAll(value.getMultimediaFile().Hashtags);
-        }
-//        topics.stream()
-//                .anyMatch(s -> s.equals(value.getMultimediaFile().ChannelName)) ? topics.add(value.getMultimediaFile().ChannelName) : System.out.println("hi");
-        //topics.stream().forEach( t -> brokerTopics.get(address).add(t) );
-
-        if(!topics.contains(value.getMultimediaFile().ChannelName)) {
-            topics.add(value.getMultimediaFile().ChannelName);
+        if(!topics.contains(value.getTopic())) {
+            topics.add(value.getTopic());
         }
         topics.stream().forEach( e -> System.out.println(e));
-
     }
     @Override
     public void disconnect(){}
@@ -199,6 +195,7 @@ public class Broker implements INode{
 //                if(chunk.IsFirst){
 //                    ArrayList<String> _topics = chunk.Hashtags;
 //                }
+
                 consumer_out.writeObject(new Value(chunk,SenderType.BROKER));
                 System.out.println(chunk.getAbsolutePath());
                 System.out.println("SENT CHUNK");
@@ -238,10 +235,13 @@ public class Broker implements INode{
                     init();
                     System.out.println("Get Brokers........");
                 }else{
-                    System.out.println(value.getAction());
-                    updateRegisteredPublishers(value);
                     updateNodes(value);
                     updateBrokerInfo();
+                    insertFileToQueue(value.getTopic());
+                    Queue.forEach((k,v)->{
+                        System.out.println("Topic: " + k + "   MultimediaFile:  " + v);
+                        v.forEach(file-> System.out.println(file.DateCreated));
+                    });
                 }
 
             }catch(Exception e){
@@ -266,52 +266,27 @@ public class Broker implements INode{
             }
         }
 
-        void updateRegisteredPublishers(Value value){
-
-            // We already have the publisher registered to Broker
-            if(registeredPublishers.containsKey(value.getAddress())){
-                registeredPublishers.get(value.getAddress())
-                        .addAll(value.getMultimediaFile().Hashtags);
-                System.out.println("Pub updated ....");
-            }else {
-                // Publisher not registered to Broker
-                registeredPublishers.put(value.getAddress(),  value.getMultimediaFile().Hashtags);
-                System.out.println("Pub is now registered...");
-            }
-
-            registeredPublishers.forEach((k,v)
-                    -> System.out.println("Publisher Address: " + k + "  Topics: " +v)
-            );
-
-        }
-
-        public void replyText(){
-            try{
-                System.out.println("Method replyText() triggered ... \n");
-                // Read Request serializable and read txt from pub
-                value = (Value) service_in.readObject();
-
-                // Register new Publisher
-                registeredPublishers.put(value.getAddress() ,value.getMultimediaFile().Hashtags );
-
-                System.out.println(value.getMultimediaFile().Hashtags);
-//                String text = service_in.readUTF();
-//                System.out.println(text);
-
-                // Write serializable back to pub
-                System.out.println("Text to send back to pub: \n");
-                String reply_text =new BufferedReader(new InputStreamReader(System.in)).readLine();
-                System.out.println("my reply is: " + reply_text);
-
-                Request req = new Request(value.getAddress() , reply_text);
-                System.out.println("Before .writeUTF ");
-                //service_out = new ObjectOutputStream(socket.getOutputStream());
-//
-                service_out.writeObject(req);
-                System.out.println(" .writeObject(req)");
-
-                service_out.flush();
-                System.out.println(" .flush()");
+        synchronized void insertFileToQueue(String hashtag){
+            ArrayList<byte[]> chunks = new ArrayList<>();
+            Date dateCreated;
+            try {
+                while(true) {
+                    Value chunk = (Value) service_in.readObject();
+                    chunks.add(chunk.getMultimediaFile().getVideoFileChunk());
+                    if (chunk.isLast){
+                        dateCreated = chunk.getMultimediaFile().DateCreated;
+                        System.out.println(" Received whole file " + dateCreated);
+                        break;
+                    }
+                }
+//                Queue.putIfAbsent(new AtomicReference<String>(hashtag) , new AtomicReference<ArrayList<MultimediaFile>>(file));
+                if(Queue.containsKey(hashtag)){
+                    Queue.get(hashtag).add(new MultimediaFile(chunks,dateCreated));
+                }else{
+                    ArrayList<MultimediaFile> list = new ArrayList<>();
+                    list.add(new MultimediaFile(chunks,dateCreated));
+                    Queue.put(new AtomicReference<>(hashtag),list);
+                }
 
             }catch (IOException | ClassNotFoundException e){
                 e.printStackTrace();
@@ -320,7 +295,6 @@ public class Broker implements INode{
         }
 
     }
-
 
     ///////////////// CONSUMER THREAD INNER CLASS///////////
     public class consumerThread extends Thread{
@@ -338,9 +312,6 @@ public class Broker implements INode{
 
         @Override
         public void run(){
-
-            ArrayList<String> requestedTopics;
-
             try{
 
                 System.out.println("Consumer Thread running ...\n");
@@ -348,23 +319,33 @@ public class Broker implements INode{
 
                     init();
                     INode.initClients.add(value.getAddress());
-                    //service_out.writeObject("USER REGISTERED");
 
-                }/// Consumer Initialized
+                }/// Consumer is Initialized
                 else{
                     updateConsumers(value);
-
-                    requestedTopics = value.getTopics();
-                    System.out.println(requestedTopics);
-                    for(Address pubAddress : registeredPublishers.keySet()){
-                        var pubTopics = registeredPublishers.get(pubAddress);
-                        System.out.println(pubTopics);
-                        if(pubTopics.stream()
-                                .anyMatch(requestedTopics::contains)){
-                            System.out.println("PULLING");
-                            pull(service_out,pubAddress,requestedTopics);
+                    for(AtomicReference<String> topic : Queue.keySet()){
+                        if (topic.equals(value.getTopic())) {
+                            System.out.println("before sort");
+                            System.out.println(Queue.get(topic));
+                            var sortedFiles = sortByDate(Queue.get(topic));
+                            System.out.println("after sort");
+                            System.out.println(sortedFiles);
+//                            service_out.writeObject(new Value(address , topic ));
+                            sendFiles(sortedFiles, value);
                         }
+//                        else{
+//                            service_out.writeObject(new Value());
+//                        }
                     }
+//                    for(Address pubAddress : registeredPublishers.keySet()){
+//                        var pubTopics = registeredPublishers.get(pubAddress);
+//                        System.out.println(pubTopics);
+//                        if(pubTopics.stream()
+//                                .anyMatch(requestedTopics::contains)){
+//                            System.out.println("PULLING");
+//                            pull(service_out,pubAddress,requestedTopics);
+//                        }
+//                    }
                 }
                 System.out.println("Consumer thread ended....");
             }catch(Exception e){
@@ -381,6 +362,35 @@ public class Broker implements INode{
             }
         }
 
+        void sendFiles(ArrayList<MultimediaFile> files , Value value){
+            try {
+                Socket socketToConsumer = new Socket(value.getAddress().getIp(), value.getAddress().getPort() + 1);
+
+                ObjectInputStream in = new ObjectInputStream(socketToConsumer.getInputStream());
+                ObjectOutputStream out = new ObjectOutputStream(socketToConsumer.getOutputStream());
+
+                files.forEach(file -> {
+                    try{
+                        List<byte[]> chunks = file.getVideoFileChunks();
+                        out.writeObject(new Value(address , value.getTopic() , SenderType.BROKER));
+                        chunks.forEach(chunk ->{
+                            try{
+                                out.writeObject(new Value(new MultimediaFile(chunk , file.DateCreated) , address , SenderType.BROKER));
+                                out.flush();
+                            }catch(IOException e){
+                                e.printStackTrace();
+                            }
+
+                        });
+                    }catch(IOException e){
+                        e.printStackTrace();
+                    }
+
+                });
+            }catch(IOException e){
+                e.printStackTrace();
+            }
+        }
         void updateConsumers(Value value){
 
             // We already have the consumer registered to Broker
@@ -390,7 +400,9 @@ public class Broker implements INode{
                 System.out.println("Con updated ....");
             }else {
                 // Publisher not registered to Broker
-                registeredConsumers.put(value.getAddress(),  value.getTopics());
+                ArrayList<String> listWithTopic = new ArrayList<>();
+                listWithTopic.add(value.getTopic());
+                registeredConsumers.put(value.getAddress(),  listWithTopic);
                 System.out.println("Con is now registered...");
             }
 
