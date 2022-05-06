@@ -74,7 +74,7 @@ public class AppNode {
                     pub.setFileCollection(text,hashTags);
                     System.out.println("FileCollection:\n");
                     System.out.println(pub.getFileCollection());
-                    System.out.println("DATEEEEE!!!: " + dateCreated);
+
                     pub.sendFile(text,hashTags,dateCreated);
 
                 } catch (Exception e) {
@@ -93,12 +93,7 @@ public class AppNode {
                     while (!(topic = br.readLine()).equals("end")) {
                         con.register(topic);
                         System.out.println("Registered to: "+topic );
-                        registered = true;
                     }
-//                    if(registered){
-//                        con.pull();
-//                    }
-
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

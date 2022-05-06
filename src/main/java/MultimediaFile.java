@@ -37,6 +37,9 @@ public class MultimediaFile implements Serializable {
         this.File.add(FileChunk);
         this.DateCreated = dateCreated;
     }
+    public MultimediaFile(byte[] FileChunk){
+        this.File.add(FileChunk);
+    }
     public MultimediaFile(List<byte[]> File,Date dateCreated){
         this.File = File;
         this.DateCreated = dateCreated;

@@ -114,11 +114,6 @@ public class Publisher {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        //MARK LAST CHUNK AS LAST TO HELP BROKER WITH ORDERING
-//        chunks.get(chunks.size() - 1).setIsLast(true);
-//        chunks.get(0).IsFirst = true;
-        //chunks.get(0).Count = sumOfFiles;
-
         return chunks;
     }
 
@@ -221,7 +216,7 @@ public class Publisher {
 
             if(text.endsWith(".mp4") || text.endsWith(".jpg")) {
                 System.out.println("GenerateChunks for video or photo");
-                //chunks = generateChunks(file , sumOfFiles);
+                //chunks = generateChunks(file);
             }
             else {
                 System.out.println("GenerateChunks for text");
@@ -236,7 +231,6 @@ public class Publisher {
                     myWriter.close();
                     metaMap = getMetadata(myFile.getAbsolutePath());
                     chunks = generateChunks(myFile);
-
 
                 } catch (Exception e) {
                     e.printStackTrace();

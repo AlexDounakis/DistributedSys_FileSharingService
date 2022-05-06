@@ -1,15 +1,20 @@
 import org.apache.cxf.endpoint.Server;
 
 import java.io.*;
+import java.lang.reflect.Array;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class Consumer implements IConsumer {
+public class Consumer{
 
     private Socket socket;
     private ServerSocket serverSocket;
@@ -17,37 +22,23 @@ public class Consumer implements IConsumer {
     public Address addr;
     private Value value;
     ArrayList<String> topics = new ArrayList();
-    private HashMap<String,ArrayList<MultimediaFile>> myMultimediaFiles = new HashMap<>();
 
     protected ArrayList<Address> brokers = new ArrayList<>(Arrays.asList(
             /// first random broker IP and Port
             new Address("192.168.56.1", 6000)
-
-
     ));
 
     public void disconnect(String s) {}
-    public void showConversationData(String s, Value v) {}
+    public void showConversationData(String s, Value v) {
 
-    public Consumer(){}
+    }
 
     public Consumer(Address _addr){
         this.addr = _addr;
-        init(5);
+        init();
+        pull();
     }
-
-    @Override
-    public void connect() {
-
-    }
-
-    @Override
-    public void disconnect() {
-
-    }
-
-    @Override
-    public void init(int x) {
+    public void init() {
         Runnable task = () ->{
             try {
                 System.out.println("\n Thread for init running...\n");
@@ -75,18 +66,13 @@ public class Consumer implements IConsumer {
         initThread.start();
     }
 
-    @Override
-    public void updateNodes(Value value) {
-
-    }
-
     public void register(String hashtag){
         this.topics.add(hashtag);
 
         // Thread .run() - thread functionality
         Runnable task = () -> {
             try {
-                System.out.println("thread Send Topics started ...");
+                System.out.println("Thread register started ...");
                 AppNode.brokersList
                         .forEach((k, t) ->
                         {
@@ -114,6 +100,7 @@ public class Consumer implements IConsumer {
             } catch (Exception e) {
                 e.getStackTrace();
             }
+            System.out.println("Thread register ended...");
 
         };
         Thread thread = new Thread(task);
@@ -125,18 +112,41 @@ public class Consumer implements IConsumer {
             try{
                  serverSocket = new ServerSocket(addr.getPort()+1);
                 while(true){
+                    System.out.println("Server Socket Open...");
                     socketToReceive = serverSocket.accept();
                     System.out.println("consumer socket.accept()\n");
                     Runnable _task = () ->{
                         try{
+                            ArrayList<Date> datesToInsert = new ArrayList<>();
                             ObjectOutputStream out = new ObjectOutputStream(socketToReceive.getOutputStream());
                             ObjectInputStream in = new ObjectInputStream(socketToReceive.getInputStream());
 
-                            Value chunkInValue = (Value)in.readObject();
-                            MultimediaFile chunk = chunkInValue.getMultimediaFile();
+                            Value hashAndDateInValue = (Value)in.readObject();
+                            String topic = hashAndDateInValue.getTopic();
+                            Date dateCreated = hashAndDateInValue.getDateCreated();
+                            System.out.println("Receiving topic:  "+topic);
+                            String home = System.getProperty("user.home");
+                            SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yy HH-mm-ss");
 
+                            if(Files.notExists(Paths.get(home + "/Downloads/" + topic + "withDate" + dateFormat.format(dateCreated) + ".txt"))){
 
+                                File file = new File(home + "/Downloads/" + topic + "withDate" + dateFormat.format(dateCreated) + ".txt");
+                                Files.createFile(file.getAbsoluteFile().toPath());
 
+                                while(true){
+                                    Value chunkInValue = (Value)in.readObject();
+                                    MultimediaFile chunk = chunkInValue.getMultimediaFile();
+                                    saveChunk(chunk,file);
+                                    System.out.println("GOT CHUNK");
+                                    if(chunkInValue.isLast){
+                                        System.out.println("Received whole File...");
+                                        break;
+                                    }
+                                }
+                            }
+                            else{
+                                System.out.println("Already Have File...");
+                            }
 
                         }catch (IOException | ClassNotFoundException e){
                             e.printStackTrace();
@@ -154,40 +164,7 @@ public class Consumer implements IConsumer {
         new Thread(task).start();
     }
 
-    public void receive(){
-
+    public void saveChunk(MultimediaFile chunk , File file) throws IOException {
+        Files.write(file.toPath() , chunk.getVideoFileChunk() , StandardOpenOption.APPEND);
     }
-
-    public void receiveFile(ObjectInputStream in){
-        /*String home = System.getProperty("user.home");
-        try {
-
-            Value chunkInValue = (Value) in.readObject();
-            //System.out.println(value_in_chunk.get);
-            MultimediaFile chunk = chunkInValue.getMultimediaFile();
-            //File file = new File(home + "/Downloads/" + chunk.FileName + ".txt");
-            System.out.println(chunk.Hashtags);
-            System.out.println(chunk.getAbsolutePath());
-
-            long sumOfFiles = chunk.Count;
-//            while(sumOfFiles >0){
-//                if(chunk.IsFirst){
-//                    //saveHashtags(chunk);
-//
-//                }else if(chunk.IsLast){
-//                    System.out.println("GOT File: ");
-//                }
-//                //saveFile(chunk);
-//                chunkInValue = (Value)in.readObject();
-//                chunk = chunkInValue.getMultimediaFile();
-////                System.out.println(chunk.Hashtags);
-//                System.out.println(chunk.getAbsolutePath());
-//
-//            }
-            System.out.println("GOT ALL FILES....");
-        }catch (IOException | ClassNotFoundException e){
-            e.printStackTrace();
-        }*/
-    }
-
 }
