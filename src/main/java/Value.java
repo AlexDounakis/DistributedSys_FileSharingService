@@ -12,6 +12,7 @@ public class Value implements Serializable {
     private String action = "something";
     private String topic;
     private Date dateCreated;
+    private String type;
     SenderType sender = null;
     public Boolean initialized = true;
     public Boolean isLast = false;
@@ -21,11 +22,12 @@ public class Value implements Serializable {
         this.multimediaFile = m;
         this.sender = senderType;
     }
-    public Value (Address address , String topic,Date dateCreated , SenderType type){
+    public Value (Address address , String topic,Date dateCreated ,String type, SenderType sender){
         this.address = address;
         this.topic = topic;
         this.dateCreated = dateCreated;
-        this.sender = type;
+        this.sender = sender;
+        this.type = type;
     }
     /// Broker to Zookeeper
     public Value(Address address , ArrayList<String> topics , SenderType type){
@@ -73,6 +75,9 @@ public class Value implements Serializable {
     public String getTopic() {return topic;}
     public Date getDateCreated(){
         return dateCreated;
+    }
+    public String getType(){
+        return type;
     }
 
 }

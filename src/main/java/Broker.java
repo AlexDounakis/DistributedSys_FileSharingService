@@ -24,6 +24,7 @@ public class Broker implements INode{
     private HashMap<Address,ArrayList<String>>  registeredConsumers;
     // Total of initialized Clients , we dont keep track of topics etc.
 
+
     // this list includes both channel names and specific topics
     public static ArrayList<String> topics = new ArrayList<>();
 
@@ -110,6 +111,7 @@ public class Broker implements INode{
         Collections.sort(mfList, MultimediaFile.DateComparator);
         return mfList;
     }
+
     /// Broker init() is responsible serving the client(either pub or cons), the brokersList {< <Ip,Port>,ArrayList<String>(Topics) >}
     @Override
     public void init(int x){
@@ -172,14 +174,13 @@ public class Broker implements INode{
                 ObjectOutputStream out = new ObjectOutputStream(socketToConsumer.getOutputStream());
 
                 List<byte[]> chunks = file.getVideoFileChunks();
-                out.writeObject(new Value(address , topic, file.DateCreated, SenderType.BROKER));
+                out.writeObject(new Value(address , topic, file.DateCreated , file.getType(), SenderType.BROKER));
                 for(int i=0;i< chunks.size();i++) {
                     try {
                         if(i==chunks.size()-1) {
                             Value valueToSend = new Value(new MultimediaFile(chunks.get(i)), address ,SenderType.PUBLISHER);
                             valueToSend.isLast = true;
                             out.writeObject(valueToSend);
-                            out.flush();
                         }else{
                             out.writeObject(new Value(new MultimediaFile(chunks.get(i)), address, SenderType.BROKER));
                             out.flush();
@@ -227,6 +228,7 @@ public class Broker implements INode{
                     Queue.forEach((k,v)->{
                         System.out.println("Topic: " + k + "   MultimediaFile:  " + v);
                         v.forEach(file-> System.out.println(file.DateCreated));
+                        v.forEach(file ->System.out.println(file.type));
                     });
                     registeredConsumers.forEach((consumer,list)->
                     {
@@ -261,22 +263,24 @@ public class Broker implements INode{
         void insertFileToQueue(String hashtag){
             ArrayList<byte[]> chunks = new ArrayList<>();
             Date dateCreated;
+            String type;
             try {
                 while(true) {
                     Value chunk = (Value) service_in.readObject();
                     chunks.add(chunk.getMultimediaFile().getVideoFileChunk());
                     if (chunk.isLast){
                         dateCreated = chunk.getMultimediaFile().DateCreated;
-                        System.out.println(" Received whole file " + dateCreated);
+                        type = chunk.getMultimediaFile().getType();
+                        System.out.println(" Received whole file " + dateCreated + "with type:   "+ type);
                         break;
                     }
                 }
 //                Queue.putIfAbsent(new AtomicReference<String>(hashtag) , new AtomicReference<ArrayList<MultimediaFile>>(file));
                 if(Queue.containsKey(hashtag)){
-                    Queue.get(hashtag).add(new MultimediaFile(chunks,dateCreated));
+                    Queue.get(hashtag).add(new MultimediaFile(chunks,dateCreated,type));
                 }else{
                     ArrayList<MultimediaFile> list = new ArrayList<>();
-                    list.add(new MultimediaFile(chunks,dateCreated));
+                    list.add(new MultimediaFile(chunks,dateCreated,type));
                     Queue.put(hashtag,list);
                 }
 
@@ -314,9 +318,8 @@ public class Broker implements INode{
 
                 }/// Consumer is Initialized
                 else{
-                    if(!(value.getAction().equalsIgnoreCase("history")))
-                        updateConsumers(value);
-
+                    System.out.println(value.getAction());
+                    updateConsumers(value);
                     for(String topic : Queue.keySet()){
                         if (topic.equals(value.getTopic())) {
                             System.out.println("before sort");
@@ -324,9 +327,22 @@ public class Broker implements INode{
                             var sortedFiles = sortByDate(Queue.get(topic));
                             System.out.println("after sort");
                             System.out.println(sortedFiles);
+//                            service_out.writeObject(new Value(address , topic ));
                             sendFiles(sortedFiles, value.getAddress(), value.getTopic());
                         }
+//                        else{
+//                            service_out.writeObject(new Value());
+//                        }
                     }
+//                    for(Address pubAddress : registeredPublishers.keySet()){
+//                        var pubTopics = registeredPublishers.get(pubAddress);
+//                        System.out.println(pubTopics);
+//                        if(pubTopics.stream()
+//                                .anyMatch(requestedTopics::contains)){
+//                            System.out.println("PULLING");
+//                            pull(service_out,pubAddress,requestedTopics);
+//                        }
+//                    }
                 }
                 System.out.println("Consumer thread ended....");
             }catch(Exception e){
