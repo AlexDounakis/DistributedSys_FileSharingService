@@ -217,42 +217,21 @@ public class Publisher {
 
             if(text.endsWith(".mp4") || text.endsWith(".jpg")) {
                 System.out.println("GenerateChunks for video or photo");
-
-                int flag = 0;
-                File file = null;
-                String fileName = null;
-                File directory = new File("data");
-                String[] fileList = directory.list();
-                if (fileList == null) {
-                    System.out.println("Empty directory");
-                }
-                else {
-                    for (int i = 0; i < fileList.length; i++) {
-                        fileName = fileList[i];
-                        if (fileName.equalsIgnoreCase(text)) { //file found
-                            file = new File(fileName);
-                            flag = 1;
-                        }
-                    }
-                }
-                if (flag == 0) { //file not found
-                    System.out.println(text + " not found");
-                }
-                chunks = generateChunks(file); //sumOfFiles TBD
+                //chunks = generateChunks(file);
             }
             else {
                 System.out.println("GenerateChunks for text");
                 try {
-
                     String home = System.getProperty("user.home");
-                    String fileName = text.substring(0,50);
-                    File file = new File("data/" + fileName + ".txt");
-                    file.createNewFile();
-                    FileWriter myWriter = new FileWriter(file);
+
+                    ///// THIS MUST CHANGE ///////
+                    File myFile = new File(text + ".txt");
+                    //myFile.createNewFile();
+                    FileWriter myWriter = new FileWriter(text + ".txt");
                     myWriter.write(text);
                     myWriter.close();
-                    metaMap = getMetadata(file.getAbsolutePath());
-                    chunks = generateChunks(file);
+                    metaMap = getMetadata(myFile.getAbsolutePath());
+                    chunks = generateChunks(myFile);
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -263,7 +242,7 @@ public class Publisher {
             for(int i=0;i<chunks.size();i++){
                 push(i, chunks ,dateCreated,serv_out);
             }
-        } catch (NoSuchAlgorithmException | IOException | TikaException | SAXException e) {
+        } catch (NoSuchAlgorithmException | IOException e) {
             e.printStackTrace();
         }
 

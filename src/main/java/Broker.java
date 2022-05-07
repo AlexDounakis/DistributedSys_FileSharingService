@@ -24,7 +24,6 @@ public class Broker implements INode{
     private HashMap<Address,ArrayList<String>>  registeredConsumers;
     // Total of initialized Clients , we dont keep track of topics etc.
 
-
     // this list includes both channel names and specific topics
     public static ArrayList<String> topics = new ArrayList<>();
 
@@ -111,7 +110,6 @@ public class Broker implements INode{
         Collections.sort(mfList, MultimediaFile.DateComparator);
         return mfList;
     }
-
     /// Broker init() is responsible serving the client(either pub or cons), the brokersList {< <Ip,Port>,ArrayList<String>(Topics) >}
     @Override
     public void init(int x){
@@ -181,6 +179,7 @@ public class Broker implements INode{
                             Value valueToSend = new Value(new MultimediaFile(chunks.get(i)), address ,SenderType.PUBLISHER);
                             valueToSend.isLast = true;
                             out.writeObject(valueToSend);
+                            out.flush();
                         }else{
                             out.writeObject(new Value(new MultimediaFile(chunks.get(i)), address, SenderType.BROKER));
                             out.flush();
@@ -315,7 +314,9 @@ public class Broker implements INode{
 
                 }/// Consumer is Initialized
                 else{
-                    updateConsumers(value);
+                    if(!(value.getAction().equalsIgnoreCase("history")))
+                        updateConsumers(value);
+
                     for(String topic : Queue.keySet()){
                         if (topic.equals(value.getTopic())) {
                             System.out.println("before sort");
@@ -323,22 +324,9 @@ public class Broker implements INode{
                             var sortedFiles = sortByDate(Queue.get(topic));
                             System.out.println("after sort");
                             System.out.println(sortedFiles);
-//                            service_out.writeObject(new Value(address , topic ));
                             sendFiles(sortedFiles, value.getAddress(), value.getTopic());
                         }
-//                        else{
-//                            service_out.writeObject(new Value());
-//                        }
                     }
-//                    for(Address pubAddress : registeredPublishers.keySet()){
-//                        var pubTopics = registeredPublishers.get(pubAddress);
-//                        System.out.println(pubTopics);
-//                        if(pubTopics.stream()
-//                                .anyMatch(requestedTopics::contains)){
-//                            System.out.println("PULLING");
-//                            pull(service_out,pubAddress,requestedTopics);
-//                        }
-//                    }
                 }
                 System.out.println("Consumer thread ended....");
             }catch(Exception e){

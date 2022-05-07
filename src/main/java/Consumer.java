@@ -29,8 +29,34 @@ public class Consumer{
     ));
 
     public void disconnect(String s) {}
-    public void showConversationData(String s, Value v) {
+    public void showConversationData(String hashtag) {
+        Runnable task =() ->{
+          try{
+              System.out.println("Thread Show Conversation Data started...");
+              AppNode.brokersList.forEach((broker,topics)->{
+                        if(topics.contains(hashtag)){
+                            Socket socketToBroker;
+                            try{
+                                socketToBroker = new Socket(broker.getIp() , broker.getPort());
+                                ObjectOutputStream out = new ObjectOutputStream(socketToBroker.getOutputStream());
+                                //ObjectInputStream in = new ObjectInputStream(socketToBroker.getInputStream());
 
+                                out.writeObject(new Value(this.addr,hashtag , "history",SenderType.CONSUMER));
+                                out.flush();
+
+                                socketToBroker.close();
+                            }catch (Exception e){
+                                e.printStackTrace();
+                            }
+
+                        }
+                      });
+          }catch (Exception e){
+              e.printStackTrace();
+          }
+          System.out.println("Thread Show Conversation Data ended...");
+        };
+        new Thread(task).start();
     }
 
     public Consumer(Address _addr){
@@ -117,8 +143,7 @@ public class Consumer{
                     System.out.println("consumer socket.accept()\n");
                     Runnable _task = () ->{
                         try{
-                            ArrayList<Date> datesToInsert = new ArrayList<>();
-                            ObjectOutputStream out = new ObjectOutputStream(socketToReceive.getOutputStream());
+                            //ObjectOutputStream out = new ObjectOutputStream(socketToReceive.getOutputStream());
                             ObjectInputStream in = new ObjectInputStream(socketToReceive.getInputStream());
 
                             Value hashAndDateInValue = (Value)in.readObject();
