@@ -7,8 +7,10 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="EventDeliverySystem_2" />
-        <module name="DistributedSys_FileSharingService" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="DistributedSys_FileSharingService" target="15" />
+    </bytecodeTargetLevel>
   </component>
 </project>

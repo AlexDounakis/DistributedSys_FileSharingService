@@ -315,6 +315,7 @@ public class Broker implements INode{
 
                 }/// Consumer is Initialized
                 else{
+                    System.out.println(value.getAction());
                     updateConsumers(value);
                     for(String topic : Queue.keySet()){
                         if (topic.equals(value.getTopic())) {

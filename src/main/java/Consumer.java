@@ -29,10 +29,6 @@ public class Consumer{
     ));
 
     public void disconnect(String s) {}
-    public void showConversationData(String s, Value v) {
-
-    }
-
     public Consumer(Address _addr){
         this.addr = _addr;
         init();
@@ -106,13 +102,42 @@ public class Consumer{
         Thread thread = new Thread(task);
         thread.start();
     }
+    public void showConversationData(String hashtag) {
+        Runnable task = () ->{
+          try{
+              System.out.println("Thread Show Conversation Data started...");
+              AppNode.brokersList.forEach((broker,topics)->{
+                  if(topics.contains(hashtag)){
+                      Socket socketToBroker;
+                      try{
+                          socketToBroker = new Socket(broker.getIp() , broker.getPort());
+                          ObjectOutputStream out = new ObjectOutputStream(socketToBroker.getOutputStream());
+                          //ObjectInputStream in = new ObjectInputStream(socketToBroker.getInputStream());
+
+                          out.writeObject(new Value(this.addr,hashtag , "history",SenderType.CONSUMER));
+                          out.flush();
+
+                          socketToBroker.close();
+                      }catch (Exception e){
+                          e.printStackTrace();
+                      }
+
+                  }
+              });
+          }catch (Exception e){
+              e.printStackTrace();
+          }
+        };
+        new Thread(task).start();
+    }
 
     public void pull(){
         Runnable task =() ->{
             try{
-                 serverSocket = new ServerSocket(addr.getPort()+1);
+                serverSocket = new ServerSocket(addr.getPort()+1);
+                System.out.println("\nServer Socket Open...");
                 while(true){
-                    System.out.println("Server Socket Open...");
+
                     socketToReceive = serverSocket.accept();
                     System.out.println("consumer socket.accept()\n");
                     Runnable _task = () ->{
