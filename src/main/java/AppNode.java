@@ -61,15 +61,60 @@ public class AppNode {
                     // text
                     if(a == 1){
                         System.out.println("Enter text to share: \n");
-                         content = new BufferedReader(new InputStreamReader(System.in)).readLine();
+                        content = new BufferedReader(new InputStreamReader(System.in)).readLine();
                     }// photo
-                    else if(a==2){
+                    else if(a==2) {
                         /// content must now be path of photo...
 //                        Path path = Paths.get("test.jpg");
-                        content ="test2.jpg";
+                        System.out.println("Here is a list of the available images:\n");
+                        File directory = new File("data");
+                        String[] fileList = directory.list();
+                        int flag = 0;
+                        for (int i = 0; i < fileList.length; i++) {
+                            if (fileList[i].substring(fileList[i].length()-3) == "jpg") {
+                                System.out.println(fileList[i]);
+                            }
+                        }
+                        System.out.println("\nChoose one of the above images:\n");
+                        while (flag == 0) {
+                            Scanner sc = new Scanner(System.in);
+                            content = sc.nextLine();
+                            for (int i = 0; i < fileList.length; i++) {
+                                if (fileList[i].equalsIgnoreCase(content)) {
+                                    flag = 1;
+                                    break;
+                                }
+                            }
+                            if (flag == 0) {
+                                System.out.println("Wrong file name, try again.");
+                            }
+                        }
                     }// video
                     else if(a==3){
-                        content = "C:\\Users\\alex\\source\\repos\\distributed_sys_streamer\\data\\sample5.mp4";
+                        //content = "C:\\Users\\alex\\source\\repos\\distributed_sys_streamer\\data\\sample5.mp4";
+                        System.out.println("Here is a list of the available videos:\n");
+                        File directory = new File("data");
+                        String[] fileList = directory.list();
+                        int flag = 0;
+                        for (int i = 0; i < fileList.length; i++) {
+                            if (fileList[i].substring(fileList[i].length()-3) == "mp4") {
+                                System.out.println(fileList[i]);
+                            }
+                        }
+                        System.out.println("\nChoose one of the above videos:\n");
+                        while (flag == 0) {
+                            Scanner sc = new Scanner(System.in);
+                            content = sc.nextLine();
+                            for (int i = 0; i < fileList.length; i++) {
+                                if (fileList[i].equalsIgnoreCase(content)) {
+                                    flag = 1;
+                                    break;
+                                }
+                            }
+                            if (flag == 0) {
+                                System.out.println("Wrong file name, try again.");
+                            }
+                        }
                     }else{
                         System.out.println("Try again...");
                         break;

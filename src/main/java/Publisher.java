@@ -233,7 +233,6 @@ public class Publisher {
                     System.out.println("Empty directory");
                 }
                 else {
-                    System.out.println();
                     for (int i = 0; i < fileList.length; i++) {
                         fileName = fileList[i];
                         if (fileName.equalsIgnoreCase(content)) { //file found
