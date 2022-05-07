@@ -249,7 +249,7 @@ public class Publisher {
                 try {
 
                     String home = System.getProperty("user.home");
-                    String fileName = text.substring(0,50);
+                    String fileName = text.substring(0,5);
                     File file = new File("data/" + fileName + ".txt");
                     file.createNewFile();
                     FileWriter myWriter = new FileWriter(file);
