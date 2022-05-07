@@ -10,6 +10,7 @@ public class MultimediaFile implements Serializable {
     String FileName;
     String ChannelName;
     Date DateCreated;
+    String type;
     ArrayList<String> Hashtags = new ArrayList<>();
     List<byte[]> File = new ArrayList<>();
 
@@ -37,12 +38,22 @@ public class MultimediaFile implements Serializable {
         this.File.add(FileChunk);
         this.DateCreated = dateCreated;
     }
+    public MultimediaFile(byte[] FileChunk , Date dateCreated, String type){
+        this.File.add(FileChunk);
+        this.DateCreated = dateCreated;
+        this.type =type;
+    }
     public MultimediaFile(byte[] FileChunk){
         this.File.add(FileChunk);
     }
     public MultimediaFile(List<byte[]> File,Date dateCreated){
         this.File = File;
         this.DateCreated = dateCreated;
+    }
+    public MultimediaFile(List<byte[]> File,Date dateCreated ,String type){
+        this.File = File;
+        this.DateCreated = dateCreated;
+        this.type = type;
     }
     public MultimediaFile( String channelName , String text){
         //this.FileChunk = FileChunk;
@@ -70,4 +81,7 @@ public class MultimediaFile implements Serializable {
         return File;
     }
     public byte[] getVideoFileChunk(){return File.get(0);}
+    public String getType(){
+        return type;
+    }
 }

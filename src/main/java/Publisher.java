@@ -108,7 +108,12 @@ public class Publisher {
 //        var metaMap = getMetadata(file.getAbsolutePath());
 
         try (FileInputStream fileInputStream = new FileInputStream(new File(file.getAbsolutePath()))) {
-            while (fileInputStream.read(videoFileChunk, 0, videoFileChunk.length) > 0) {
+            while (fileInputStream.read(videoFileChunk, 0, videoFileChunk.length) > 511) {
+                chunks.add(videoFileChunk);
+                System.out.println(fileInputStream.available());
+            }
+            if(fileInputStream.available()>0){
+                fileInputStream.read(videoFileChunk);
                 chunks.add(videoFileChunk);
             }
         } catch (Exception e) {
@@ -197,8 +202,9 @@ public class Publisher {
         thread.start();
 
     }
-    public void notifyBroker(String text,String hashtag, Date dateCreated){
+    public void notifyBroker(String content,String hashtag, Date dateCreated){
         try{
+            String type = null;
             Address address = hashTopic(hashtag);
             System.out.println("Notifying Broker: " + address  + " for:  "+ hashtag);
 
@@ -207,49 +213,74 @@ public class Publisher {
 
             ArrayList<String> listOfHashtag = new ArrayList<>();
             listOfHashtag.add(hashtag);
-            serv_out.writeObject(new Value(this.addr,hashtag , "something",SenderType.PUBLISHER));
-            serv_out.flush();
 
-            /// send video to broker ///
+
+            /// send file to broker ///
             ArrayList<byte[]> chunks = new ArrayList<>();
             var metaMap = new HashMap<String,String>();
 
-            if(text.endsWith(".mp4") || text.endsWith(".jpg")) {
+            if(content.endsWith(".mp4") || content.endsWith(".jpg")) {
                 System.out.println("GenerateChunks for video or photo");
-                //chunks = generateChunks(file);
+                type = content.substring(content.length()-4);
+                System.out.println(type);
+                int flag = 0;
+                File file = null;
+                String fileName;
+                File directory = new File("data");
+                String[] fileList = directory.list();
+                if (fileList == null) {
+                    System.out.println("Empty directory");
+                }
+                else {
+                    System.out.println();
+                    for (int i = 0; i < fileList.length; i++) {
+                        fileName = fileList[i];
+                        if (fileName.equalsIgnoreCase(content)) { //file found
+                            file = new File(directory+"\\"+fileName);
+                            flag = 1;
+                        }
+                    }
+                }
+                if (flag == 0) { //file not found
+                    System.out.println(content + " not found");
+                }else {
+                    chunks = generateChunks(file);
+                }
             }
             else {
                 System.out.println("GenerateChunks for text");
                 try {
+                    type = ".txt";
                     String home = System.getProperty("user.home");
-
-                    ///// THIS MUST CHANGE ///////
-                    File myFile = new File(text + ".txt");
-                    //myFile.createNewFile();
-                    FileWriter myWriter = new FileWriter(text + ".txt");
-                    myWriter.write(text);
+                    String fileName = content.substring(0,5);
+                    File file = new File("data/" + fileName + ".txt");
+                    file.createNewFile();
+                    FileWriter myWriter = new FileWriter(file);
+                    myWriter.write(content);
                     myWriter.close();
-                    metaMap = getMetadata(myFile.getAbsolutePath());
-                    chunks = generateChunks(myFile);
+                    metaMap = getMetadata(file.getAbsolutePath());
+                    chunks = generateChunks(file);
 
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
+            serv_out.writeObject(new Value(this.addr,hashtag , "something" ,SenderType.PUBLISHER));
+            serv_out.flush();
             /// we have to set IsFirst / IsLast in Value obj
 
             for(int i=0;i<chunks.size();i++){
-                push(i, chunks ,dateCreated,serv_out);
+                push(i, chunks ,dateCreated,type,serv_out);
             }
-        } catch (NoSuchAlgorithmException | IOException e) {
+        } catch (NoSuchAlgorithmException | IOException | TikaException | SAXException e) {
             e.printStackTrace();
         }
 
     }
-    public void push(int i , ArrayList<byte[]> chunks, Date dateCreated, ObjectOutputStream serv_out) throws IOException {
+    public void push(int i , ArrayList<byte[]> chunks, Date dateCreated, String type,ObjectOutputStream serv_out) throws IOException {
 
         if(i==chunks.size()-1){
-            Value valueToSend = new Value(new MultimediaFile(chunks.get(i), dateCreated), this.addr ,SenderType.PUBLISHER);
+            Value valueToSend = new Value(new MultimediaFile(chunks.get(i), dateCreated , type), this.addr ,SenderType.PUBLISHER);
             valueToSend.isLast = true;
             serv_out.writeObject(valueToSend);
 

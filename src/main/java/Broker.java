@@ -174,7 +174,7 @@ public class Broker implements INode{
                 ObjectOutputStream out = new ObjectOutputStream(socketToConsumer.getOutputStream());
 
                 List<byte[]> chunks = file.getVideoFileChunks();
-                out.writeObject(new Value(address , topic, file.DateCreated, SenderType.BROKER));
+                out.writeObject(new Value(address , topic, file.DateCreated , file.getType(), SenderType.BROKER));
                 for(int i=0;i< chunks.size();i++) {
                     try {
                         if(i==chunks.size()-1) {
@@ -228,6 +228,7 @@ public class Broker implements INode{
                     Queue.forEach((k,v)->{
                         System.out.println("Topic: " + k + "   MultimediaFile:  " + v);
                         v.forEach(file-> System.out.println(file.DateCreated));
+                        v.forEach(file ->System.out.println(file.type));
                     });
                     registeredConsumers.forEach((consumer,list)->
                     {
@@ -262,22 +263,24 @@ public class Broker implements INode{
         void insertFileToQueue(String hashtag){
             ArrayList<byte[]> chunks = new ArrayList<>();
             Date dateCreated;
+            String type;
             try {
                 while(true) {
                     Value chunk = (Value) service_in.readObject();
                     chunks.add(chunk.getMultimediaFile().getVideoFileChunk());
                     if (chunk.isLast){
                         dateCreated = chunk.getMultimediaFile().DateCreated;
-                        System.out.println(" Received whole file " + dateCreated);
+                        type = chunk.getMultimediaFile().getType();
+                        System.out.println(" Received whole file " + dateCreated + "with type:   "+ type);
                         break;
                     }
                 }
 //                Queue.putIfAbsent(new AtomicReference<String>(hashtag) , new AtomicReference<ArrayList<MultimediaFile>>(file));
                 if(Queue.containsKey(hashtag)){
-                    Queue.get(hashtag).add(new MultimediaFile(chunks,dateCreated));
+                    Queue.get(hashtag).add(new MultimediaFile(chunks,dateCreated,type));
                 }else{
                     ArrayList<MultimediaFile> list = new ArrayList<>();
-                    list.add(new MultimediaFile(chunks,dateCreated));
+                    list.add(new MultimediaFile(chunks,dateCreated,type));
                     Queue.put(hashtag,list);
                 }
 

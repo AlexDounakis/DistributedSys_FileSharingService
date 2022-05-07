@@ -149,13 +149,14 @@ public class Consumer{
                             Value hashAndDateInValue = (Value)in.readObject();
                             String topic = hashAndDateInValue.getTopic();
                             Date dateCreated = hashAndDateInValue.getDateCreated();
+                            String typeOfFile = hashAndDateInValue.getType();
                             System.out.println("Receiving topic:  "+topic);
                             String home = System.getProperty("user.home");
                             SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yy HH-mm-ss");
 
-                            if(Files.notExists(Paths.get(home + "/Downloads/" + topic + "withDate" + dateFormat.format(dateCreated) + ".txt"))){
+                            if(Files.notExists(Paths.get(home + "/Downloads/" + topic + "withDate" + dateFormat.format(dateCreated) + typeOfFile))){
 
-                                File file = new File(home + "/Downloads/" + topic + "withDate" + dateFormat.format(dateCreated) + ".txt");
+                                File file = new File(home + "/Downloads/" + topic + "withDate" + dateFormat.format(dateCreated) + typeOfFile);
                                 Files.createFile(file.getAbsoluteFile().toPath());
 
                                 while(true){

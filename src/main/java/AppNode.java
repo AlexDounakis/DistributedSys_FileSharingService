@@ -7,6 +7,8 @@ import java.lang.reflect.Array;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 public class AppNode {
@@ -53,9 +55,25 @@ public class AppNode {
             // Publisher logic
             if(type == 1) {
                 try {
-                    //switch case with user input to determine multimedia file , text photo or video
-                    System.out.println("Enter text to share: \n");
-                    String text = new BufferedReader(new InputStreamReader(System.in)).readLine();
+                    System.out.println("Type 1 to send text / Type 2 to send Photo / Type 3 to send Video ....\n");
+                    int a = new Scanner(System.in).nextInt();
+                    String content = null;
+                    // text
+                    if(a == 1){
+                        System.out.println("Enter text to share: \n");
+                         content = new BufferedReader(new InputStreamReader(System.in)).readLine();
+                    }// photo
+                    else if(a==2){
+                        /// content must now be path of photo...
+//                        Path path = Paths.get("test.jpg");
+                        content ="test2.jpg";
+                    }// video
+                    else if(a==3){
+                        content = "C:\\Users\\alex\\source\\repos\\distributed_sys_streamer\\data\\sample5.mp4";
+                    }else{
+                        System.out.println("Try again...");
+                        break;
+                    }
 
                     System.out.println("Enter HashTag ...  type end to Stop");
                     ArrayList<String> hashTags = new ArrayList();
@@ -67,15 +85,13 @@ public class AppNode {
                         hashTags.add(hashtag);
                         System.out.println(hashtag + " added to hashtags\n");
                     }
-                    /// USER INPUT FOR DATE CREATED
-                    //
                     Date dateCreated = new Date();
                     /// video case --> text should be the path location selected after the switch case
-                    pub.setFileCollection(text,hashTags);
+                    pub.setFileCollection(content,hashTags);
                     System.out.println("FileCollection:\n");
                     System.out.println(pub.getFileCollection());
 
-                    pub.sendFile(text,hashTags,dateCreated);
+                    pub.sendFile(content,hashTags,dateCreated);
 
                 } catch (Exception e) {
                     e.printStackTrace();
