@@ -74,7 +74,7 @@ public class AppNode {
                     pub.setFileCollection(text,hashTags);
                     System.out.println("FileCollection:\n");
                     System.out.println(pub.getFileCollection());
-                    System.out.println("DATEEEEE!!!: " + dateCreated);
+
                     pub.sendFile(text,hashTags,dateCreated);
 
                 } catch (Exception e) {
@@ -84,20 +84,28 @@ public class AppNode {
             // Consumer Logic
             if(type == 2) {
                 try {
-                    System.out.println("Enter topics of interest: \n");
+
+                    System.out.println("Type 2 to register / Type 1 to view conversation data ....\n");
+                    int a = new Scanner(System.in).nextInt();
                     BufferedReader br  = new BufferedReader(new InputStreamReader(System.in));
                     String topic;
-                    boolean registered = false;
-                    System.out.println("Type end to Stop");
 
-                    while (!(topic = br.readLine()).equals("end")) {
-                        con.register(topic);
-                        System.out.println("Registered to: "+topic );
-                        registered = true;
+                    switch (a){
+                        case 1:
+                            System.out.println("Enter topic to show history: \n");
+                            topic = br.readLine();
+                            con.showConversationData(topic);
+                            break;
+                        case 2:
+                            System.out.println("Enter topics of interest: \n");
+                            while (!(topic = br.readLine()).equals("end")) {
+                                con.register(topic);
+                                System.out.println("Registered to: "+topic );
+                                System.out.println("Type end to Stop");
+                            }
+                            break;
                     }
-//                    if(registered){
-//                        con.pull();
-//                    }
+
 
                 } catch (IOException e) {
                     e.printStackTrace();

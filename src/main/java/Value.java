@@ -1,5 +1,6 @@
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -10,6 +11,7 @@ public class Value implements Serializable {
     private Address address;
     private String action = "something";
     private String topic;
+    private Date dateCreated;
     SenderType sender = null;
     public Boolean initialized = true;
     public Boolean isLast = false;
@@ -18,6 +20,12 @@ public class Value implements Serializable {
     public Value (MultimediaFile m,SenderType senderType) {
         this.multimediaFile = m;
         this.sender = senderType;
+    }
+    public Value (Address address , String topic,Date dateCreated , SenderType type){
+        this.address = address;
+        this.topic = topic;
+        this.dateCreated = dateCreated;
+        this.sender = type;
     }
     /// Broker to Zookeeper
     public Value(Address address , ArrayList<String> topics , SenderType type){
@@ -63,5 +71,8 @@ public class Value implements Serializable {
     }
 
     public String getTopic() {return topic;}
+    public Date getDateCreated(){
+        return dateCreated;
+    }
 
 }

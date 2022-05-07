@@ -24,11 +24,11 @@ public class Broker implements INode{
     private HashMap<Address,ArrayList<String>>  registeredConsumers;
     // Total of initialized Clients , we dont keep track of topics etc.
 
-
     // this list includes both channel names and specific topics
     public static ArrayList<String> topics = new ArrayList<>();
+
     // handles thread parallelism
-    private Map<AtomicReference<String>, ArrayList<MultimediaFile>> Queue = new ConcurrentHashMap< >();
+    private Map<String, ArrayList<MultimediaFile>> Queue = new ConcurrentHashMap< >();
 
     // Constructor
     public Broker(String Ip , int port){
@@ -110,7 +110,6 @@ public class Broker implements INode{
         Collections.sort(mfList, MultimediaFile.DateComparator);
         return mfList;
     }
-
     /// Broker init() is responsible serving the client(either pub or cons), the brokersList {< <Ip,Port>,ArrayList<String>(Topics) >}
     @Override
     public void init(int x){
@@ -163,52 +162,39 @@ public class Broker implements INode{
 
     }
 
-    public void pull(ObjectOutputStream consumer_out , Address pubAddress , ArrayList<String> topics){
-        ObjectInputStream pub_in;
-        ObjectOutputStream pub_out;
+    public void sendFiles(ArrayList<MultimediaFile> files ,Address _address , String topic){
+        files.forEach(file -> {
+            try{
+                Socket socketToConsumer = new Socket(_address.getIp(), _address.getPort() + 1);
+                System.out.println("Sending files to:   "+_address);
 
-//        ObjectInputStream cons_in;
-//        ObjectOutputStream cons_out;
+                ObjectInputStream in = new ObjectInputStream(socketToConsumer.getInputStream());
+                ObjectOutputStream out = new ObjectOutputStream(socketToConsumer.getOutputStream());
 
-        MultimediaFile chunk;
+                List<byte[]> chunks = file.getVideoFileChunks();
+                out.writeObject(new Value(address , topic, file.DateCreated, SenderType.BROKER));
+                for(int i=0;i< chunks.size();i++) {
+                    try {
+                        if(i==chunks.size()-1) {
+                            Value valueToSend = new Value(new MultimediaFile(chunks.get(i)), address ,SenderType.PUBLISHER);
+                            valueToSend.isLast = true;
+                            out.writeObject(valueToSend);
+                            out.flush();
+                        }else{
+                            out.writeObject(new Value(new MultimediaFile(chunks.get(i)), address, SenderType.BROKER));
+                            out.flush();
+                        }
+                    } catch (IOException e) {
+                            e.printStackTrace();
+                    }
+                }
 
-        try{
-
-            Socket pubSocket = new Socket(pubAddress.getIp(),pubAddress.getPort()+1);
-            System.out.println(pubSocket.getPort() + "EXPECTED: " + (pubAddress.getPort()+1));
-
-            pub_in = new ObjectInputStream(pubSocket.getInputStream());
-            pub_out = new ObjectOutputStream(pubSocket.getOutputStream());
-            System.out.println("PubSocket open ");
-
-            pub_out.writeObject(topics);
-            pub_out.flush();
-
-            //cons_out = new ObjectOutputStream(consumerSocket.getOutputStream());
-            //cons_in = new ObjectInputStream(consumerSocket.getInputStream());
-            //System.out.println("Consumer Socket open ");
-            while(true){
-
-                Value value = (Value)pub_in.readObject();
-                System.out.println("GOT CHUNK");
-                chunk = value.getMultimediaFile();
-//                if(chunk.IsFirst){
-//                    ArrayList<String> _topics = chunk.Hashtags;
-//                }
-
-                consumer_out.writeObject(new Value(chunk,SenderType.BROKER));
-                System.out.println(chunk.getAbsolutePath());
-                System.out.println("SENT CHUNK");
-                break;
-//                if(chunk.IsLast){
-//                    System.out.println("Received all chunks");
-//                    break;
-//                }
+            }catch(IOException e){
+                e.printStackTrace();
             }
-
-        }catch(IOException | ClassNotFoundException e){
-            e.printStackTrace();
-        }
+            System.out.println("Sent File");
+            });
+        System.out.println("Sending Files ended...");
     }
 
 ///////////////// PUBLISHER THREAD INNER CLASS///////////
@@ -242,6 +228,12 @@ public class Broker implements INode{
                         System.out.println("Topic: " + k + "   MultimediaFile:  " + v);
                         v.forEach(file-> System.out.println(file.DateCreated));
                     });
+                    registeredConsumers.forEach((consumer,list)->
+                    {
+                        if(list.contains(value.getTopic())){
+                            sendFiles(Queue.get(value.getTopic()),consumer , value.getTopic());
+                        }
+                    });
                 }
 
             }catch(Exception e){
@@ -266,7 +258,7 @@ public class Broker implements INode{
             }
         }
 
-        synchronized void insertFileToQueue(String hashtag){
+        void insertFileToQueue(String hashtag){
             ArrayList<byte[]> chunks = new ArrayList<>();
             Date dateCreated;
             try {
@@ -285,7 +277,7 @@ public class Broker implements INode{
                 }else{
                     ArrayList<MultimediaFile> list = new ArrayList<>();
                     list.add(new MultimediaFile(chunks,dateCreated));
-                    Queue.put(new AtomicReference<>(hashtag),list);
+                    Queue.put(hashtag,list);
                 }
 
             }catch (IOException | ClassNotFoundException e){
@@ -322,30 +314,19 @@ public class Broker implements INode{
 
                 }/// Consumer is Initialized
                 else{
-                    updateConsumers(value);
-                    for(AtomicReference<String> topic : Queue.keySet()){
+                    if(!(value.getAction().equalsIgnoreCase("history")))
+                        updateConsumers(value);
+
+                    for(String topic : Queue.keySet()){
                         if (topic.equals(value.getTopic())) {
                             System.out.println("before sort");
                             System.out.println(Queue.get(topic));
                             var sortedFiles = sortByDate(Queue.get(topic));
                             System.out.println("after sort");
                             System.out.println(sortedFiles);
-//                            service_out.writeObject(new Value(address , topic ));
-                            sendFiles(sortedFiles, value);
+                            sendFiles(sortedFiles, value.getAddress(), value.getTopic());
                         }
-//                        else{
-//                            service_out.writeObject(new Value());
-//                        }
                     }
-//                    for(Address pubAddress : registeredPublishers.keySet()){
-//                        var pubTopics = registeredPublishers.get(pubAddress);
-//                        System.out.println(pubTopics);
-//                        if(pubTopics.stream()
-//                                .anyMatch(requestedTopics::contains)){
-//                            System.out.println("PULLING");
-//                            pull(service_out,pubAddress,requestedTopics);
-//                        }
-//                    }
                 }
                 System.out.println("Consumer thread ended....");
             }catch(Exception e){
@@ -362,35 +343,7 @@ public class Broker implements INode{
             }
         }
 
-        void sendFiles(ArrayList<MultimediaFile> files , Value value){
-            try {
-                Socket socketToConsumer = new Socket(value.getAddress().getIp(), value.getAddress().getPort() + 1);
 
-                ObjectInputStream in = new ObjectInputStream(socketToConsumer.getInputStream());
-                ObjectOutputStream out = new ObjectOutputStream(socketToConsumer.getOutputStream());
-
-                files.forEach(file -> {
-                    try{
-                        List<byte[]> chunks = file.getVideoFileChunks();
-                        out.writeObject(new Value(address , value.getTopic() , SenderType.BROKER));
-                        chunks.forEach(chunk ->{
-                            try{
-                                out.writeObject(new Value(new MultimediaFile(chunk , file.DateCreated) , address , SenderType.BROKER));
-                                out.flush();
-                            }catch(IOException e){
-                                e.printStackTrace();
-                            }
-
-                        });
-                    }catch(IOException e){
-                        e.printStackTrace();
-                    }
-
-                });
-            }catch(IOException e){
-                e.printStackTrace();
-            }
-        }
         void updateConsumers(Value value){
 
             // We already have the consumer registered to Broker
