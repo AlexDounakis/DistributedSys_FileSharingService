@@ -108,12 +108,7 @@ public class Publisher {
 //        var metaMap = getMetadata(file.getAbsolutePath());
 
         try (FileInputStream fileInputStream = new FileInputStream(new File(file.getAbsolutePath()))) {
-            while (fileInputStream.read(videoFileChunk, 0, videoFileChunk.length) > 511) {
-                chunks.add(videoFileChunk);
-                System.out.println(fileInputStream.available());
-            }
-            if(fileInputStream.available()>0){
-                fileInputStream.read(videoFileChunk);
+            while (fileInputStream.read(videoFileChunk, 0, videoFileChunk.length) > 0) {
                 chunks.add(videoFileChunk);
             }
         } catch (Exception e) {
@@ -283,6 +278,7 @@ public class Publisher {
             Value valueToSend = new Value(new MultimediaFile(chunks.get(i), dateCreated , type), this.addr ,SenderType.PUBLISHER);
             valueToSend.isLast = true;
             serv_out.writeObject(valueToSend);
+            System.out.println("IS LAST TRUE");
 
         }else {
             serv_out.writeObject(new Value(new MultimediaFile(chunks.get(i), dateCreated), this.addr, SenderType.PUBLISHER));

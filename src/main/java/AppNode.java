@@ -66,10 +66,55 @@ public class AppNode {
                     else if(a==2){
                         /// content must now be path of photo...
 //                        Path path = Paths.get("test.jpg");
-                        content ="test2.jpg";
+                        System.out.println("Here is a list of the available images:\n");
+                        File directory = new File("data");
+                        String[] fileList = directory.list();
+                        int flag = 0;
+                        for (String s : fileList) {
+                            if (s.endsWith("jpg")) {
+                                System.out.println(s);
+                            }
+                        }
+                        System.out.println("\nChoose one of the above images:\n");
+                        while (flag == 0) {
+                            Scanner sc = new Scanner(System.in);
+                            content = sc.nextLine();
+                            for (String s : fileList) {
+                                if (s.equalsIgnoreCase(content)) {
+                                    flag = 1;
+                                    break;
+                                }
+                            }
+                            if (flag == 0) {
+                                System.out.println("Wrong file name, try again.");
+                            }
+                        }
                     }// video
                     else if(a==3){
-                        content = "C:\\Users\\alex\\source\\repos\\distributed_sys_streamer\\data\\sample5.mp4";
+                        //content = "C:\\Users\\alex\\source\\repos\\distributed_sys_streamer\\data\\sample5.mp4";
+                        System.out.println("Here is a list of the available videos:\n");
+                        File directory = new File("data");
+                        String[] fileList = directory.list();
+                        int flag = 0;
+                        for (String s : fileList) {
+                            if (s.endsWith("mp4")) {
+                                System.out.println(s);
+                            }
+                        }
+                        System.out.println("\nChoose one of the above videos:\n");
+                        while (flag == 0) {
+                            Scanner sc = new Scanner(System.in);
+                            content = sc.nextLine();
+                            for (String s : fileList) {
+                                if (s.equalsIgnoreCase(content)) {
+                                    flag = 1;
+                                    break;
+                                }
+                            }
+                            if (flag == 0) {
+                                System.out.println("Wrong file name, try again.");
+                            }
+                        }
                     }else{
                         System.out.println("Try again...");
                         break;

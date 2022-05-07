@@ -266,6 +266,7 @@ public class Broker implements INode{
             String type;
             try {
                 while(true) {
+                    System.out.println("INSERTING FILE TO QUEUE");
                     Value chunk = (Value) service_in.readObject();
                     chunks.add(chunk.getMultimediaFile().getVideoFileChunk());
                     if (chunk.isLast){
