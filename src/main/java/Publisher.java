@@ -7,6 +7,9 @@ import org.xml.sax.SAXException;
 import java.io.*;
 import java.io.File;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.math.BigInteger;
 import java.security.MessageDigest;
@@ -87,12 +90,16 @@ public class Publisher {
 
     public ArrayList<byte[]> generateChunks(File file ) throws TikaException, IOException, SAXException {
         ArrayList<byte[]> chunks = new ArrayList<>();
-        byte[] videoFileChunk = new byte[1024 * 1024/2];// 512KB chunk
-//        var metaMap = getMetadata(file.getAbsolutePath());
+        try {
+            byte[] fileInBytes = Files.readAllBytes(Paths.get(file.getAbsolutePath()));
 
-        try (FileInputStream fileInputStream = new FileInputStream(new File(file.getAbsolutePath()))) {
-            while (fileInputStream.read(videoFileChunk, 0, videoFileChunk.length) > 0) {
-                chunks.add(videoFileChunk);
+            for(int i=0 ; i < fileInBytes.length;){
+                byte [] chunk = new byte[Math.min(1024*1024/2 , fileInBytes.length -i)];
+
+                for(int j=0 ; j<chunk.length ; j++,i++){
+                    chunk[j] = fileInBytes[i];
+                }
+                chunks.add(chunk);
             }
         } catch (Exception e) {
             e.printStackTrace();
