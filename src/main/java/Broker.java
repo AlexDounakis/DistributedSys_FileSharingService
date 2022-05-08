@@ -129,7 +129,6 @@ public class Broker implements INode{
 
     public static HashMap<Address,ArrayList<String>> getBrokerList(){
         HashMap<Address,ArrayList<String>> brokers = new HashMap<>();
-        ArrayList<Address> a = new ArrayList<Address>(brokers.keySet());
 
         try(Socket service = new Socket(INode.ZookeeperAddress.getIp() , INode.ZookeeperAddress.getPort())){
             ObjectOutputStream service_out = new ObjectOutputStream(service.getOutputStream());
@@ -290,7 +289,6 @@ public class Broker implements INode{
             }
 
         }
-
     }
 
     ///////////////// CONSUMER THREAD INNER CLASS///////////
@@ -328,26 +326,19 @@ public class Broker implements INode{
                             var sortedFiles = sortByDate(Queue.get(topic));
                             System.out.println("after sort");
                             System.out.println(sortedFiles);
-//                            service_out.writeObject(new Value(address , topic ));
                             sendFiles(sortedFiles, value.getAddress(), value.getTopic());
                         }
-//                        else{
-//                            service_out.writeObject(new Value());
-//                        }
                     }
-//                    for(Address pubAddress : registeredPublishers.keySet()){
-//                        var pubTopics = registeredPublishers.get(pubAddress);
-//                        System.out.println(pubTopics);
-//                        if(pubTopics.stream()
-//                                .anyMatch(requestedTopics::contains)){
-//                            System.out.println("PULLING");
-//                            pull(service_out,pubAddress,requestedTopics);
-//                        }
-//                    }
                 }
                 System.out.println("Consumer thread ended....");
             }catch(Exception e){
                 e.printStackTrace();
+            }finally{
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
         void init(){

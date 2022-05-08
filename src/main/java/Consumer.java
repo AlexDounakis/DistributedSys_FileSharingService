@@ -28,7 +28,6 @@ public class Consumer{
             new Address("192.168.56.1", 6000)
     ));
 
-    public void disconnect(String s) {}
     public Consumer(Address _addr){
         this.addr = _addr;
         init();
@@ -74,24 +73,24 @@ public class Consumer{
                         {
                             System.out.println(k + " " + t + "");
                             if (t.contains(hashtag)) {
-                                Socket socketToBroker;
+                                Socket socketToBroker = null;
                                 try {
                                     socketToBroker = new Socket(k.getIp(), k.getPort());
                                     System.out.println("Connected to " + k.getIp() + ":" + k.getPort());
 
                                     ObjectOutputStream service_out = new ObjectOutputStream(socketToBroker.getOutputStream());
-                                    ObjectInputStream service_in = new ObjectInputStream(socketToBroker.getInputStream());
 
                                     service_out.writeObject(new Value(this.addr,hashtag , "something",SenderType.CONSUMER));
                                     service_out.flush();
 
+                                }catch (Exception e) {
+                                    e.printStackTrace();
+                                }try{
                                     socketToBroker.close();
-
-                                } catch (Exception e) {
+                                }catch (Exception e){
                                     e.printStackTrace();
                                 }
                             }
-
                         });
             } catch (Exception e) {
                 e.getStackTrace();
@@ -108,7 +107,7 @@ public class Consumer{
               System.out.println("Thread Show Conversation Data started...");
               AppNode.brokersList.forEach((broker,topics)->{
                   if(topics.contains(hashtag)){
-                      Socket socketToBroker;
+                      Socket socketToBroker = null;
                       try{
                           socketToBroker = new Socket(broker.getIp() , broker.getPort());
                           ObjectOutputStream out = new ObjectOutputStream(socketToBroker.getOutputStream());
@@ -116,7 +115,9 @@ public class Consumer{
 
                           out.writeObject(new Value(this.addr,hashtag , "history",SenderType.CONSUMER));
                           out.flush();
-
+                      }catch (Exception e){
+                          e.printStackTrace();
+                      }try{
                           socketToBroker.close();
                       }catch (Exception e){
                           e.printStackTrace();
@@ -127,6 +128,7 @@ public class Consumer{
           }catch (Exception e){
               e.printStackTrace();
           }
+          System.out.println("Thread Show Conversation Data ended...");
         };
         new Thread(task).start();
     }
@@ -180,11 +182,14 @@ public class Consumer{
                     };
                     new Thread(_task).start();
                 }
-
-
-
             }catch(IOException e){
                 e.printStackTrace();
+            }finally {
+                try {
+                    socketToReceive.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         };
         new Thread(task).start();

@@ -8,13 +8,10 @@ import java.io.*;
 import java.io.File;
 import java.net.Socket;
 import java.util.*;
-
-
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-//public class Publisher extends AppNode extends Thread implements IPublisher implements Runnable {
 public class Publisher {
 
     private Socket socket;
@@ -42,21 +39,7 @@ public class Publisher {
         return this.FileCollection;
     }
 
-    public static void main (String args[]){
-//
-//        Publisher pub = new Publisher();
-//        String path = "C:\\Users\\alex\\source\\repos\\distributed_sys_streamer\\data\\sample3.mp4";
-//
-//        HashMap<String,String> my_video = pub.getMetadata(path);
-//
-////        MultimediaFile video_bytes = new MultimediaFile(IOUtils.toByteArray(new FileInputStream(path))  ,
-////                "ChannelName_test",
-////                my_video.get("Creation-Date"));
-//
-//
-//        System.out.println(video_bytes.getVideoFileChunk());
-//        System.out.println(video_bytes.DateCreated);
-    }
+    public static void main (String args[]){}
 
     public HashMap<String, String> getMetadata(String file){
         HashMap<String, String> data = new HashMap<>();
@@ -134,7 +117,6 @@ public class Publisher {
                         -> System.out.println("Address: " + k + "   Topics:" +  v)
                 );
 
-                socket.close();
             }catch(IOException | ClassNotFoundException e){
                 e.printStackTrace();
             }
@@ -201,14 +183,13 @@ public class Publisher {
         try{
             String type = null;
             Address address = hashTopic(hashtag);
+            Socket socketBroker = new Socket(address.getIp(), address.getPort());
             System.out.println("Notifying Broker: " + address  + " for:  "+ hashtag);
 
-            Socket socketBroker = new Socket(address.getIp(), address.getPort());
             ObjectOutputStream serv_out = new ObjectOutputStream(socketBroker.getOutputStream());
 
             ArrayList<String> listOfHashtag = new ArrayList<>();
             listOfHashtag.add(hashtag);
-
 
             /// send file to broker ///
             ArrayList<byte[]> chunks = new ArrayList<>();
@@ -262,15 +243,13 @@ public class Publisher {
             }
             serv_out.writeObject(new Value(this.addr,hashtag , "something" ,SenderType.PUBLISHER));
             serv_out.flush();
-            /// we have to set IsFirst / IsLast in Value obj
-
             for(int i=0;i<chunks.size();i++){
                 push(i, chunks ,dateCreated,type,serv_out);
             }
+
         } catch (NoSuchAlgorithmException | IOException | TikaException | SAXException e) {
             e.printStackTrace();
         }
-
     }
     public void push(int i , ArrayList<byte[]> chunks, Date dateCreated, String type,ObjectOutputStream serv_out) throws IOException {
 
