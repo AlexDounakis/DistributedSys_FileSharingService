@@ -2,6 +2,7 @@ import net.didion.jwnl.data.Exc;
 
 import java.io.*;
 import java.lang.reflect.Array;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -50,12 +51,16 @@ public class Broker implements INode{
     public static void main(String args[]) throws IOException{
         System.out.println("port num:");
         port = new Scanner(System.in).nextInt();
-        inetAddress = InetAddress.getLocalHost();
-        Ip = inetAddress.getHostAddress();
-        System.out.println(Ip);
-        address = new Address(Ip,port);
+//        inetAddress = InetAddress.getLocalHost();
+//        Ip = inetAddress.getHostAddress();
+//        System.out.println(Ip);
+        final DatagramSocket socket = new DatagramSocket();
+        socket.connect(InetAddress.getByName("8.8.8.8"),10002);
 
-        new Broker(Ip , port);
+        address = new Address(socket.getLocalAddress().getHostAddress(),port);
+        System.out.println(address);
+
+        new Broker(address.getIp(),address.getPort());
     }
 
     // creates server side socket and accepts connections
@@ -164,7 +169,9 @@ public class Broker implements INode{
     }
 
     public void sendFiles(ArrayList<MultimediaFile> files ,Address _address , String topic){
+        System.out.println(files);
         files.forEach(file -> {
+            System.out.println(file);
             try{
                 Socket socketToConsumer = new Socket(_address.getIp(), _address.getPort() + 1);
                 System.out.println("Sending files to:   "+_address);
@@ -188,7 +195,7 @@ public class Broker implements INode{
                             e.printStackTrace();
                     }
                 }
-
+                System.out.println("FOR exited");
             }catch(IOException e){
                 e.printStackTrace();
             }
@@ -232,6 +239,8 @@ public class Broker implements INode{
                     registeredConsumers.forEach((consumer,list)->
                     {
                         if(list.contains(value.getTopic())){
+                            System.out.println("QUEUE: ");
+                            System.out.println(Queue.get(value.getTopic()));
                             sendFiles(Queue.get(value.getTopic()),consumer , value.getTopic());
                         }
                     });
@@ -283,6 +292,7 @@ public class Broker implements INode{
                     list.add(new MultimediaFile(chunks,dateCreated,type));
                     Queue.put(hashtag,list);
                 }
+                //System.out.println(Queue);
 
             }catch (IOException | ClassNotFoundException e){
                 e.printStackTrace();

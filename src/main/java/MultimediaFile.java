@@ -23,10 +23,10 @@ public class MultimediaFile implements Serializable {
         Date Date2 = m2.DateCreated;
 
         //ascending order
-        //return Date1.compareTo(Date2);
+        return Date1.compareTo(Date2);
 
         //descending order
-        return Date2.compareTo(Date1);
+        //return Date2.compareTo(Date1);
     };
 
     public MultimediaFile(String absolutePath){

@@ -1,5 +1,7 @@
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.InetAddress;
+import java.net.DatagramSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -22,7 +24,17 @@ public class ZooKeeper {
         final ExecutorService threadPool = Executors.newFixedThreadPool(12);
         Runnable task  = () ->
         {
-            try(ServerSocket serverSocket = new ServerSocket(INode.ZookeeperAddress.getPort(), 20)){
+
+            try{
+                final DatagramSocket socket = new DatagramSocket();
+                socket.connect(InetAddress.getByName("8.8.8.8") , 10002);
+//                InetAddress addr = InetAddress.getByName("8.8.8.8").;
+                System.out.println(socket.getLocalAddress().getHostAddress());
+                System.out.println(socket.getLocalAddress());
+                ServerSocket serverSocket = new ServerSocket(INode.ZookeeperAddress.getPort(), 20 , socket.getLocalAddress());
+
+                //System.out.println(serverSocket.getInetAddress());
+
                 System.out.println("Waiting for brokers to connect...");
                 while (true) {
                     Socket clientSocket = serverSocket.accept();

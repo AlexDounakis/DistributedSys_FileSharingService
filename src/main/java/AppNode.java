@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Array;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -34,10 +35,15 @@ public class AppNode {
             System.out.println("port num:");
             port = new Scanner(System.in).nextInt();
             System.out.println("Your port num is:  "+ port);
-            inetAddress = InetAddress.getLocalHost();
-            Ip = inetAddress.getHostAddress();
-            System.out.println("Your Ip is:   "+Ip);
-            address = new Address(Ip,port);
+//            inetAddress = InetAddress.getLocalHost();
+//            Ip = inetAddress.getHostAddress();
+//            System.out.println("Your Ip is:   "+Ip);
+//            address = new Address(Ip,port);
+
+            final DatagramSocket dSocket = new DatagramSocket();
+            dSocket.connect(InetAddress.getByName("8.8.8.8"),10002);
+            address = new Address(dSocket.getLocalAddress().getHostAddress() , port);
+
 
         }catch(Exception e){
             e.getStackTrace();

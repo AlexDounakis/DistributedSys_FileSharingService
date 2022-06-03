@@ -25,7 +25,7 @@ public class Consumer{
 
     protected ArrayList<Address> brokers = new ArrayList<>(Arrays.asList(
             /// first random broker IP and Port
-            new Address("192.168.56.1", 6000)
+            new Address("10.26.13.175", 6000)
     ));
 
     public Consumer(Address _addr){
@@ -85,11 +85,12 @@ public class Consumer{
 
                                 }catch (Exception e) {
                                     e.printStackTrace();
-                                }try{
-                                    socketToBroker.close();
-                                }catch (Exception e){
-                                    e.printStackTrace();
                                 }
+//                                try{
+//                                    socketToBroker.close();
+//                                }catch (Exception e){
+//                                    e.printStackTrace();
+//                                }
                             }
                         });
             } catch (Exception e) {
@@ -117,11 +118,12 @@ public class Consumer{
                           out.flush();
                       }catch (Exception e){
                           e.printStackTrace();
-                      }try{
-                          socketToBroker.close();
-                      }catch (Exception e){
-                          e.printStackTrace();
                       }
+//                      try{
+//                          socketToBroker.close();
+//                      }catch (Exception e){
+//                          e.printStackTrace();
+//                      }
 
                   }
               });
