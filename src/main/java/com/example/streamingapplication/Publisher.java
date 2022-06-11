@@ -1,19 +1,23 @@
+package com.example.streamingapplication;
+
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.mp4.MP4Parser;
 import org.apache.tika.sax.BodyContentHandler;
 import org.xml.sax.SAXException;
+
 import java.io.*;
-import java.io.File;
+import java.math.BigInteger;
 import java.net.Socket;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
-import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
 
 public class Publisher {
 
@@ -116,11 +120,11 @@ public class Publisher {
                 ObjectOutputStream service_out = new ObjectOutputStream(socket.getOutputStream());
                 ObjectInputStream service_in = new ObjectInputStream(socket.getInputStream());
 
-                service_out.writeObject(new Value(this.addr,"get brokers",SenderType.PUBLISHER));
+                service_out.writeObject(new Value(this.addr,"get brokers", SenderType.PUBLISHER));
                 service_out.flush();
                 AppNode.brokersList = (HashMap) service_in.readObject();
                 //System.out.println("HashMap Read:\n");
-                AppNode.brokersList.forEach((k,v)
+                AppNode.brokersList.forEach((k, v)
                         -> System.out.println("Address: " + k + "   Topics:" +  v)
                 );
 
@@ -142,7 +146,7 @@ public class Publisher {
             case 0 -> {
                 System.out.println("Broker 1 will handle topic:" + topic);
                 System.out.println(Broker.getBrokerList().keySet().toArray()[0]);
-                return (Address)Broker.getBrokerList().keySet().toArray()[0];
+                return (Address) Broker.getBrokerList().keySet().toArray()[0];
 //                return (Address) Broker.getBrokerList().keySet().toArray()[0];
             }
             case 1 -> {
@@ -248,7 +252,7 @@ public class Publisher {
                     e.printStackTrace();
                 }
             }
-            serv_out.writeObject(new Value(this.addr,hashtag , "something" ,SenderType.PUBLISHER));
+            serv_out.writeObject(new Value(this.addr,hashtag , "something" , SenderType.PUBLISHER));
             serv_out.flush();
             for(int i=0;i<chunks.size();i++){
                 push(i, chunks ,dateCreated,type,serv_out);
@@ -261,7 +265,7 @@ public class Publisher {
     public void push(int i , ArrayList<byte[]> chunks, Date dateCreated, String type,ObjectOutputStream serv_out) throws IOException {
 
         if(i==chunks.size()-1){
-            Value valueToSend = new Value(new MultimediaFile(chunks.get(i), dateCreated , type), this.addr ,SenderType.PUBLISHER);
+            Value valueToSend = new Value(new MultimediaFile(chunks.get(i), dateCreated , type), this.addr , SenderType.PUBLISHER);
             valueToSend.isLast = true;
             serv_out.writeObject(valueToSend);
             System.out.println("IS LAST TRUE");
