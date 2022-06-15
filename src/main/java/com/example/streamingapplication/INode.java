@@ -1,9 +1,6 @@
-import org.apache.cxf.jaxrs.ext.Nullable;
+package com.example.streamingapplication;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 public interface INode {
 

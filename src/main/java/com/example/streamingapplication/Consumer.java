@@ -1,7 +1,9 @@
-import org.apache.cxf.endpoint.Server;
+package com.example.streamingapplication;
 
-import java.io.*;
-import java.lang.reflect.Array;
+import java.io.File;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
@@ -12,9 +14,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.concurrent.atomic.AtomicReference;
 
-public class Consumer{
+public class Consumer {
 
     private Socket socket;
     private ServerSocket serverSocket;
@@ -41,10 +42,10 @@ public class Consumer{
 
                 ObjectOutputStream service_out = new ObjectOutputStream(socket.getOutputStream());
                 ObjectInputStream service_in = new ObjectInputStream(socket.getInputStream());
-                service_out.writeObject(new Value(this.addr,SenderType.CONSUMER,false));
+                service_out.writeObject(new Value(this.addr, SenderType.CONSUMER,false));
 
                 AppNode.brokersList = (HashMap) service_in.readObject();
-                AppNode.brokersList.forEach((k,v)
+                AppNode.brokersList.forEach((k, v)
                         -> System.out.println("Address: " + k + "   Topics:" +  v));
 
             }catch(Exception e){
@@ -80,7 +81,7 @@ public class Consumer{
 
                                     ObjectOutputStream service_out = new ObjectOutputStream(socketToBroker.getOutputStream());
 
-                                    service_out.writeObject(new Value(this.addr,hashtag , "something",SenderType.CONSUMER));
+                                    service_out.writeObject(new Value(this.addr,hashtag , "something", SenderType.CONSUMER));
                                     service_out.flush();
 
                                 }catch (Exception e) {
@@ -106,7 +107,7 @@ public class Consumer{
         Runnable task = () ->{
           try{
               System.out.println("Thread Show Conversation Data started...");
-              AppNode.brokersList.forEach((broker,topics)->{
+              AppNode.brokersList.forEach((broker, topics)->{
                   if(topics.contains(hashtag)){
                       Socket socketToBroker = null;
                       try{
@@ -114,7 +115,7 @@ public class Consumer{
                           ObjectOutputStream out = new ObjectOutputStream(socketToBroker.getOutputStream());
                           //ObjectInputStream in = new ObjectInputStream(socketToBroker.getInputStream());
 
-                          out.writeObject(new Value(this.addr,hashtag , "history",SenderType.CONSUMER));
+                          out.writeObject(new Value(this.addr,hashtag , "history", SenderType.CONSUMER));
                           out.flush();
                       }catch (Exception e){
                           e.printStackTrace();

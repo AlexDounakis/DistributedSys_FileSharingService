@@ -1,8 +1,10 @@
+package com.example.streamingapplication;
+
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.Comparator;
 
 public class MultimediaFile implements Serializable {
 
@@ -46,16 +48,16 @@ public class MultimediaFile implements Serializable {
     public MultimediaFile(byte[] FileChunk){
         this.File.add(FileChunk);
     }
-    public MultimediaFile(List<byte[]> File,Date dateCreated){
+    public MultimediaFile(List<byte[]> File, Date dateCreated){
         this.File = File;
         this.DateCreated = dateCreated;
     }
-    public MultimediaFile(List<byte[]> File,Date dateCreated ,String type){
+    public MultimediaFile(List<byte[]> File, Date dateCreated , String type){
         this.File = File;
         this.DateCreated = dateCreated;
         this.type = type;
     }
-    public MultimediaFile( String channelName , String text){
+    public MultimediaFile(String channelName , String text){
         //this.FileChunk = FileChunk;
         this.ChannelName = channelName;
         this.text = text;
