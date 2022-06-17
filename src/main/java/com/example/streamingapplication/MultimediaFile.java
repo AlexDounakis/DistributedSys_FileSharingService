@@ -18,6 +18,7 @@ public class MultimediaFile implements Serializable {
 
     public long Count = 0;
 
+    private static final long serialVersionUID = 2007333342745327391L;
     String text;
 
     public static Comparator <MultimediaFile> DateComparator = (m1, m2) -> {
