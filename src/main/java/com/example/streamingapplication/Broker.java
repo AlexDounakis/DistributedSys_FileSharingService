@@ -174,8 +174,9 @@ public class Broker implements INode {
         files.forEach(file -> {
             System.out.println(file);
             try{
-                Socket socketToConsumer = new Socket(_address.getIp(), _address.getPort() + 1);
                 System.out.println("Sending files to:   "+_address);
+                Socket socketToConsumer = new Socket("127.0.0.1", _address.getPort() + 1);
+
 
                 ObjectInputStream in = new ObjectInputStream(socketToConsumer.getInputStream());
                 ObjectOutputStream out = new ObjectOutputStream(socketToConsumer.getOutputStream());
@@ -200,7 +201,7 @@ public class Broker implements INode {
             }catch(IOException e){
                 e.printStackTrace();
             }
-            System.out.println("Sent File");
+
             });
         System.out.println("Sending Files ended...");
     }
