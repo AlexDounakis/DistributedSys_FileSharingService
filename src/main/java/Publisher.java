@@ -1,3 +1,4 @@
+import com.example.streamingapplication.AppNode;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.ParseContext;

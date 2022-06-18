@@ -147,6 +147,7 @@ public class Publisher {
                 System.out.println("Broker 1 will handle topic:" + topic);
                 System.out.println(Broker.getBrokerList().keySet().toArray()[0]);
                 return (Address) Broker.getBrokerList().keySet().toArray()[0];
+                // return AppNode.brokersList.
 //                return (Address) Broker.getBrokerList().keySet().toArray()[0];
             }
             case 1 -> {
@@ -201,7 +202,7 @@ public class Publisher {
 
             ArrayList<String> listOfHashtag = new ArrayList<>();
             listOfHashtag.add(hashtag);
-
+            //System.out.println("content:"+content);
             /// send file to broker ///
             ArrayList<byte[]> chunks = new ArrayList<>();
             var metaMap = new HashMap<String,String>();
