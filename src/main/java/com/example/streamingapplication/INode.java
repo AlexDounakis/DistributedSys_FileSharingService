@@ -1,13 +1,10 @@
-import org.apache.cxf.jaxrs.ext.Nullable;
+package com.example.streamingapplication;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 public interface INode {
 
-    static  final Address ZookeeperAddress = new Address("192.168.1.9",5000);
+    static  final Address ZookeeperAddress = new Address("192.168.1.5",5000);
 
     ArrayList<Address> initClients = new ArrayList<>();
     //void init(Request request) throws IOException;

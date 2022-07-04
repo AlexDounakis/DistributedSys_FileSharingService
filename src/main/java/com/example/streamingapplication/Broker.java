@@ -1,17 +1,18 @@
-import net.didion.jwnl.data.Exc;
+package com.example.streamingapplication;
 
-import java.io.*;
-import java.lang.reflect.Array;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
 
 
-public class Broker implements INode{
+public class Broker implements INode {
 
     static InetAddress inetAddress;
     private static Address address = null;
@@ -158,7 +159,7 @@ public class Broker implements INode{
             out.writeObject("insert or update broker");
             out.flush();
 
-            out.writeObject(new Value(address , topics,SenderType.BROKER));
+            out.writeObject(new Value(address , topics, SenderType.BROKER));
             out.flush();
 
             System.out.println("Broker send info to Zookeeper");
@@ -168,13 +169,14 @@ public class Broker implements INode{
 
     }
 
-    public void sendFiles(ArrayList<MultimediaFile> files ,Address _address , String topic){
+    public void sendFiles(ArrayList<MultimediaFile> files , Address _address , String topic){
         System.out.println(files);
         files.forEach(file -> {
             System.out.println(file);
             try{
-                Socket socketToConsumer = new Socket(_address.getIp(), _address.getPort() + 1);
                 System.out.println("Sending files to:   "+_address);
+                Socket socketToConsumer = new Socket("127.0.0.1", _address.getPort() + 1);
+
 
                 ObjectInputStream in = new ObjectInputStream(socketToConsumer.getInputStream());
                 ObjectOutputStream out = new ObjectOutputStream(socketToConsumer.getOutputStream());
@@ -184,7 +186,7 @@ public class Broker implements INode{
                 for(int i=0;i< chunks.size();i++) {
                     try {
                         if(i==chunks.size()-1) {
-                            Value valueToSend = new Value(new MultimediaFile(chunks.get(i)), address ,SenderType.PUBLISHER);
+                            Value valueToSend = new Value(new MultimediaFile(chunks.get(i)), address , SenderType.PUBLISHER);
                             valueToSend.isLast = true;
                             out.writeObject(valueToSend);
                         }else{
@@ -199,7 +201,7 @@ public class Broker implements INode{
             }catch(IOException e){
                 e.printStackTrace();
             }
-            System.out.println("Sent File");
+
             });
         System.out.println("Sending Files ended...");
     }
